@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/routes.dart';
 import '../../../../core/app_theme.dart';
 import '../../../search/domain/entities/search_enums.dart';
 import '../../../search/presentation/widgets/property_result_card.dart'
@@ -175,11 +177,7 @@ class _Content extends StatelessWidget {
               ),
               SimilarProperties(
                 propertyId: p.id,
-                onTap: (s) => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PropertyDetailsPage(propertyId: s.id),
-                  ),
-                ),
+                onTap: (s) => context.push(Routes.propertyDetailsPath(s.id)),
               ),
               const SizedBox(height: 16),
               Center(

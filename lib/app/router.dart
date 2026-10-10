@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import '../features/properties/presentation/pages/property_details_page.dart';
 import '../features/auth/presentation/pages/account_status_page.dart';
 import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
@@ -42,6 +42,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Placeholders until the next modules exist.
       GoRoute(path: Routes.home, builder: (_, __) => const MainShell()),
       GoRoute(path: Routes.adminDashboard, builder: (_, __) => const AdminPlaceholderPage()),
+            GoRoute(
+        path: Routes.propertyDetails,
+        builder: (_, state) =>
+            PropertyDetailsPage(propertyId: state.pathParameters['id']!),
+      ),
     ],
   );
   ref.onDispose(router.dispose);

@@ -11,7 +11,8 @@ class Routes {
   static const accountStatus = '/account-status';
   static const home = '/home';
   static const adminDashboard = '/admin/dashboard';
-
+  static const propertyDetails = '/property/:id';
+  static String propertyDetailsPath(String id) => '/property/$id';
   /// Reachable while signed out.
   static const publicRoutes = {welcome, login, register, forgotPassword};
 }

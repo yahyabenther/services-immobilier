@@ -7,7 +7,9 @@ import '../../providers/search_filter_provider.dart';
 import '../../providers/search_results_provider.dart';
 import '../widgets/property_result_card.dart';
 import '../widgets/search_labels.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/routes.dart';
 class SearchResultsPage extends ConsumerWidget {
   const SearchResultsPage({super.key});
 
@@ -61,8 +63,11 @@ class SearchResultsPage extends ConsumerWidget {
                   ),
                 );
               }
-              // TODO(module détails): ouvrir la page détails du bien.
-              return PropertyResultCard(property: items[i - 1]);
+                            final item = items[i - 1];
+              return PropertyResultCard(
+                property: item,
+                onTap: () => context.push(Routes.propertyDetailsPath(item.id)),
+              );
             },
           );
         },
