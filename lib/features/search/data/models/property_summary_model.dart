@@ -37,8 +37,8 @@ class PropertySummaryModel {
       },
       imageUrls: List<String>.from(d['imageUrls'] as List? ?? const []),
       createdAt: created is Timestamp ? created.toDate() : null,
-      lat: (d['lat'] as num?)?.toDouble(),
-      lng: (d['lng'] as num?)?.toDouble(),
+      lat: (d['latitude'] as num?)?.toDouble(),
+      lng: (d['longitude'] as num?)?.toDouble(),
     );
   }
 }
