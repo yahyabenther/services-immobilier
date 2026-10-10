@@ -9,6 +9,7 @@ import '../widgets/filter_section.dart';
 import '../widgets/option_chip.dart';
 import '../widgets/search_labels.dart';
 
+import 'search_results_page.dart';
 class SearchFiltersPage extends ConsumerStatefulWidget {
   const SearchFiltersPage({super.key});
 
@@ -250,8 +251,8 @@ class _SearchFiltersPageState extends ConsumerState<SearchFiltersPage> {
                   child: FilledButton(
                     style: FilledButton.styleFrom(backgroundColor: C.navy),
                     // Step 6: navigation vers SearchResultsPage.
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${f.activeCount} filtre(s) actif(s)')),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SearchResultsPage()),
                     ),
                     child: const Text('Afficher les résultats'),
                   ),
