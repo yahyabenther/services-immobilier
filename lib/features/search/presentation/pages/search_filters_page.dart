@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/routes.dart';
 import '../../../../core/app_theme.dart';
 import '../../../../widgets/common_widgets.dart';
 import '../../domain/entities/search_enums.dart';
@@ -9,7 +11,6 @@ import '../widgets/filter_section.dart';
 import '../widgets/option_chip.dart';
 import '../widgets/search_labels.dart';
 
-import 'search_results_page.dart';
 class SearchFiltersPage extends ConsumerStatefulWidget {
   const SearchFiltersPage({super.key});
 
@@ -207,7 +208,9 @@ class _SearchFiltersPageState extends ConsumerState<SearchFiltersPage> {
             // Superficie minimum (0 = pas de filtre)
             FilterSection(
               title: 'Superficie minimum',
-              hint: f.minSurface == null ? 'Indifférent' : '${f.minSurface!.round()} m²',
+              hint: f.minSurface == null
+                  ? 'Indifférent'
+                  : '${f.minSurface!.round()} m²',
               child: Slider(
                 value: f.minSurface ?? 0,
                 min: 0,
@@ -222,7 +225,9 @@ class _SearchFiltersPageState extends ConsumerState<SearchFiltersPage> {
             // Équipements
             FilterSection(
               title: 'Prestations & commodités',
-              hint: f.amenities.isEmpty ? null : '${f.amenities.length} sélectionné(s)',
+              hint: f.amenities.isEmpty
+                  ? null
+                  : '${f.amenities.length} sélectionné(s)',
               child: Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -250,10 +255,7 @@ class _SearchFiltersPageState extends ConsumerState<SearchFiltersPage> {
                 Expanded(
                   child: FilledButton(
                     style: FilledButton.styleFrom(backgroundColor: C.navy),
-                    // Step 6: navigation vers SearchResultsPage.
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SearchResultsPage()),
-                    ),
+                    onPressed: () => context.push(Routes.searchResults),
                     child: const Text('Afficher les résultats'),
                   ),
                 ),

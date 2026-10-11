@@ -20,6 +20,8 @@ class PropertyModel {
     return Property(
       id: doc.id,
       ownerId: (d['ownerId'] ?? '') as String,
+      ownerName: d['ownerName'] as String?,
+      ownerRole: (d['ownerRole'] ?? 'owner') as String,
       agentId: d['agentId'] as String?,
       title: (d['title'] ?? '') as String,
       description: (d['description'] ?? '') as String,

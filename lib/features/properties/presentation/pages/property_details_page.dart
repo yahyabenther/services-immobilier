@@ -49,7 +49,7 @@ class PropertyDetailsPage extends ConsumerWidget {
                 title: 'Bien introuvable',
                 subtitle: "Cette annonce n'existe plus ou a été retirée.",
                 actionLabel: 'Retour',
-                onAction: () => Navigator.of(context).pop(),
+                onAction: () => context.pop(),
               )
             : _Content(property: p),
       ),
@@ -61,6 +61,9 @@ class PropertyDetailsPage extends ConsumerWidget {
                 child: Row(
                   children: [
                     OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 52),
+                      ),
                       onPressed: () => _comingSoon(context, 'Favoris'),
                       icon: const Icon(Icons.favorite_border_rounded),
                       label: const Text('Favori'),
@@ -145,6 +148,20 @@ class _Content extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               KeyFactsRow(property: p),
+              if (p.ownerName != null && p.ownerName!.isNotEmpty) ...[
+                const _SectionTitle('Annonceur'),
+                Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.person_outline),
+                    ),
+                    title: Text(p.ownerName!),
+                    subtitle: p.ownerRole == null || p.ownerRole!.isEmpty
+                        ? null
+                        : Text(p.ownerRole!),
+                  ),
+                ),
+              ],
               const _SectionTitle('Description'),
               Text(
                 p.description.isEmpty ? 'Aucune description.' : p.description,

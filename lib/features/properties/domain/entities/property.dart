@@ -3,6 +3,8 @@ import '../../../search/domain/entities/search_enums.dart';
 class Property {
   final String id;
   final String ownerId;
+  final String? ownerName;
+  final String ownerRole; // owner | agent | agency
   final String? agentId;
   final String title;
   final String description;
@@ -30,6 +32,8 @@ class Property {
   const Property({
     required this.id,
     required this.ownerId,
+    this.ownerName,
+    this.ownerRole = 'owner',
     this.agentId,
     required this.title,
     this.description = '',

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../features/properties/presentation/pages/property_details_page.dart';
+
 import '../features/auth/presentation/pages/account_status_page.dart';
 import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
@@ -11,10 +11,12 @@ import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/providers/auth_provider.dart';
+import '../features/properties/presentation/pages/property_details_page.dart';
+import '../features/search/presentation/pages/search_results_page.dart';
+import '../pages/main/main_shell.dart';
 import 'placeholder_pages.dart';
 import 'router_guard.dart';
 import 'routes.dart';
-import '../pages/main/main_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect whenever the auth state changes.
@@ -39,14 +41,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.verifyEmail, builder: (_, __) => const VerifyEmailPage()),
       GoRoute(path: Routes.accountStatus, builder: (_, __) => const AccountStatusPage()),
-      // Placeholders until the next modules exist.
+
+      // Main app (bottom navigation).
       GoRoute(path: Routes.home, builder: (_, __) => const MainShell()),
-      GoRoute(path: Routes.adminDashboard, builder: (_, __) => const AdminPlaceholderPage()),
-            GoRoute(
+
+      // Search & Properties.
+      GoRoute(path: Routes.searchResults, builder: (_, __) => const SearchResultsPage()),
+      GoRoute(
         path: Routes.propertyDetails,
         builder: (_, state) =>
             PropertyDetailsPage(propertyId: state.pathParameters['id']!),
       ),
+
+      // Placeholder until the admin module exists.
+      GoRoute(path: Routes.adminDashboard, builder: (_, __) => const AdminPlaceholderPage()),
     ],
   );
   ref.onDispose(router.dispose);
