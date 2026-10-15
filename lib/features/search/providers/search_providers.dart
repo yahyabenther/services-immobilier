@@ -40,6 +40,9 @@ class SearchResultsController extends Notifier<SearchState> {
 
   @override
   SearchState build() {
+    // User-scoped: filters and results are rebuilt from scratch whenever the
+    // signed-in user changes (logout, account switch).
+    ref.watch(currentUserProvider.select((u) => u?.id));
     ref.onDispose(() => _debounce?.cancel());
     return const SearchState();
   }

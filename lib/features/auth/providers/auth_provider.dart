@@ -131,7 +131,9 @@ class AuthController extends Notifier<AuthState> {
       await ref.read(logoutProvider)();
     } finally {
       state = const AuthState.unauthenticated();
-      // Module hook: invalidate user-specific providers (favorites, messages...) here.
+      // User-scoped providers (search state, selected location, ...) watch
+      // `currentUserProvider` and reset themselves. Modules that add per-user data
+      // (favorites, messages) must do the same.
     }
   }
 

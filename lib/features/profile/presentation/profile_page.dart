@@ -1,10 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/routes.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../data/profile_repository.dart';
 import 'edit_profile_page.dart';
@@ -20,7 +18,10 @@ class UserProfilePage extends ConsumerStatefulWidget {
 }
 
 class _UserProfilePageState extends ConsumerState<UserProfilePage> {
-  final ProfileRepository _repository = ProfileRepository();
+  ProfileRepository get _repository => ref.read(profileRepositoryProvider);
+
+  // Created once (a new stream on every build would re-subscribe each time).
+  Stream<Map<String, dynamic>?>? _profileStream;
 
   static const Color navy = Color(0xFF10244A);
   static const Color blue = Color(0xFF1769F4);
@@ -113,12 +114,6 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     }
   }
 
-  void _comingSoon(String feature) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$feature will be available in an upcoming update.')));
-  }
-
   Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(
@@ -141,6 +136,7 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     required String title,
     String? subtitle,
     VoidCallback? onTap,
+    bool unavailable = false,
   }) {
     return Card(
       color: Colors.white,
@@ -157,26 +153,29 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
           horizontal: 16,
           vertical: 4,
         ),
-        leading: Icon(icon, color: blue),
+        enabled: !unavailable,
+        leading: Icon(icon, color: unavailable ? Colors.grey : blue),
         title: Text(title),
-        subtitle: subtitle == null
+        subtitle: unavailable
+            ? const Text('Coming soon')
+            : subtitle == null
             ? null
             : Text(
                 subtitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-        trailing: onTap == null
+        trailing: (onTap == null || unavailable)
             ? null
             : const Icon(Icons.chevron_right),
-        onTap: onTap,
+        onTap: unavailable ? null : onTap,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final authUser = FirebaseAuth.instance.currentUser;
+    final authUser = ref.watch(currentUserProvider);
 
     if (authUser == null) {
       return const Scaffold(
@@ -197,12 +196,20 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
         elevation: 0,
       ),
       body: StreamBuilder<Map<String, dynamic>?>(
-        stream: _repository.watchProfile(),
+        stream: _profileStream ??= _repository.watchProfile(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(
-              child: Text(
-                'Unable to load profile information.',
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Unable to load profile information.'),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => setState(() => _profileStream = null), // re-subscribes
+                    child: const Text('Try again'),
+                  ),
+                ],
               ),
             );
           }
@@ -224,7 +231,7 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
           }
 
           final name = (data['name'] ??
-                  authUser.displayName ??
+                  authUser.name ??
                   'ImmoFind User')
               .toString();
 
@@ -238,12 +245,6 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
 
           final governorate =
               (data['preferredCity'] ?? '').toString();
-
-          final role =
-              (data['role'] ?? 'user').toString();
-
-          final status =
-              (data['status'] ?? 'active').toString();
 
           return Center(
             child: ConstrainedBox(
@@ -281,12 +282,21 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
 
                   const SizedBox(height: 8),
 
-                  Text(
-                    'Role: $role  •  Status: $status',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                    ),
+                  // Only indicators backed by real account data.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        authUser.emailVerified ? Icons.verified_outlined : Icons.mail_outline,
+                        size: 16,
+                        color: authUser.emailVerified ? Colors.green : Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        authUser.emailVerified ? 'Email verified' : 'Email not verified',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 20),
@@ -359,28 +369,30 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
 
                   _sectionTitle('Activity'),
 
+                  // Destinations that do not exist yet are shown as unavailable
+                  // instead of routing to a blank screen or pretending to work.
                   _profileItem(
                     icon: Icons.favorite_outline,
                     title: 'Favorites',
-                    onTap: () => context.go(Routes.favorites),
+                    unavailable: true, // TODO(Module 07): onTap -> Routes.favorites
                   ),
 
                   _profileItem(
                     icon: Icons.search,
-                    title: 'Searches',
-                    onTap: () => context.go(Routes.search),
+                    title: 'Saved searches',
+                    unavailable: true,
                   ),
 
                   _profileItem(
                     icon: Icons.message_outlined,
                     title: 'Messages',
-                    onTap: () => _comingSoon('Messages'),
+                    unavailable: true, // TODO(Module 09)
                   ),
 
                   _profileItem(
                     icon: Icons.flag_outlined,
                     title: 'Reports',
-                    onTap: () => _comingSoon('Reports'),
+                    unavailable: true, // TODO(Module 13)
                   ),
                 ],
               ),

@@ -1,13 +1,20 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../auth/providers/auth_provider.dart';
+
+/// Override in tests with a fake / emulator-backed instance.
+final profileRepositoryProvider = Provider<ProfileRepository>(
+  (ref) => ProfileRepository(ref.watch(firestoreProvider), ref.watch(firebaseAuthProvider)),
+);
 
 class ProfileRepository {
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
+  ProfileRepository(this._firestore, this._auth);
 
-  final FirebaseAuth _auth =
-      FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
   // Get the currently authenticated user.
   User? get currentUser => _auth.currentUser;

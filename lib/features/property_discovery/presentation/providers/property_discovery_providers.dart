@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/tunisia_governorates.dart';
 import '../../../../core/errors/discovery_failure.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../properties/domain/entities/property.dart';
@@ -64,12 +65,40 @@ final nearbyPropertiesProvider = FutureProvider.autoDispose<SectionData>((ref) a
 /// Outcome of "use my current location", so the UI can explain what happened.
 enum DeviceLocationOutcome { success, denied, deniedForever, serviceDisabled, error }
 
+/// The governorate saved in the user's profile (`preferredCity`), or null.
+/// Used only as the STARTING location on Home: it is never treated as GPS, and a
+/// profile that cannot be read just means no starting location.
+final preferredGovernorateProvider = StreamProvider.autoDispose<String?>((ref) {
+  final uid = ref.watch(currentUserProvider.select((u) => u?.id));
+  if (uid == null) return Stream.value(null);
+  return ref
+      .watch(firestoreProvider)
+      .collection('users')
+      .doc(uid)
+      .snapshots()
+      .map((s) {
+    final raw = (s.data()?['preferredCity'] as String?)?.trim().toLowerCase();
+    if (raw == null || raw.isEmpty) return null;
+    for (final g in tunisiaGovernorates) {
+      if (g.toLowerCase() == raw) return g;
+    }
+    return null; // not a known governorate: never guess
+  }).handleError((_) {});
+});
+
 final selectedLocationProvider =
     NotifierProvider<SelectedLocationNotifier, DiscoveryLocation?>(SelectedLocationNotifier.new);
 
 class SelectedLocationNotifier extends Notifier<DiscoveryLocation?> {
   @override
-  DiscoveryLocation? build() => null; // never assume a location
+  DiscoveryLocation? build() {
+    // Reset when the signed-in user changes (logout / account switch).
+    ref.watch(currentUserProvider.select((u) => u?.id));
+    // Start from the profile's preferred governorate when there is one; otherwise
+    // nothing is assumed. (Re-runs when the profile value arrives or changes.)
+    final preferred = ref.watch(preferredGovernorateProvider).value;
+    return preferred == null ? null : DiscoveryLocation.governorate(preferred);
+  }
 
   void selectGovernorate(String governorate) => state = DiscoveryLocation.governorate(governorate);
 

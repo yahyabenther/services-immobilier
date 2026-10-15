@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+# Local configuration (never commit)
+.env
 
 # IntelliJ related
 *.iml
@@ -46,3 +48,5 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+tools/serviceAccountKey.json
+tools/node_modules/

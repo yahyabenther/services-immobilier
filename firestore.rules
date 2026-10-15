@@ -22,26 +22,21 @@ service cloud.firestore {
         && request.resource.data.verified == false
         && request.resource.data.email == request.auth.token.email;
 
+      // Module 02: notificationPreferences added (Notifications page saves it).
       allow update: if (isSelf(uid)
           && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['name', 'phone', 'photoUrl', 'preferredCity']))
+               .hasOnly(['name', 'phone', 'photoUrl', 'preferredCity', 'notificationPreferences']))
         || isAdmin();
 
       allow delete: if false;
     }
 
     // ---- Module 03: public discovery of properties ---------------------------
-    // Anyone may read PUBLISHED listings (every query must include status == 'published').
-    // Owners read their own drafts; admins read everything.
-    // Never store private contact data (phone/email) inside property documents.
     match /properties/{propertyId} {
       allow read: if resource.data.status == 'published'
         || (signedIn() && resource.data.ownerId == request.auth.uid)
         || isAdmin();
 
-      // Temporary: admin-only writes (needed by the debug seeder). Module 08 will
-      // let owners/agents create `pending_review` listings; publishing stays
-      // admin/backend-only so a client can never self-publish.
       allow create, update, delete: if isAdmin();
     }
   }

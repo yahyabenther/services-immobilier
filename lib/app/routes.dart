@@ -23,6 +23,9 @@ class Routes {
   static const publish = '/publish'; // Module 08
   static const adminDashboard = '/admin/dashboard';
 
+  /// go_router pattern for Module 05. Build real links with [propertyDetails].
+  static const propertyDetailsPattern = '/property/:id';
+
   /// Reachable while signed out.
   static const publicRoutes = {welcome, login, register, forgotPassword};
 

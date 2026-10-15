@@ -80,6 +80,8 @@ class Property {
     required this.status,
     required this.verificationStatus,
     this.agentId,
+    this.ownerName,
+    this.ownerRole,
     this.description = '',
     this.surface,
     this.bedrooms,
@@ -102,6 +104,13 @@ class Property {
   final String id;
   final String ownerId;
   final String? agentId;
+
+  /// PUBLIC display fields copied onto the listing by the publisher (Module 08).
+  /// Never read from the private `users/{uid}` document.
+  final String? ownerName;
+
+  /// `owner` | `agent` | `agency` (display label only).
+  final String? ownerRole;
   final String title;
   final String description;
   final TransactionType transactionType;

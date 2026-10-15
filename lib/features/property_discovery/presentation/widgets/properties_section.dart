@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/routes.dart';
 import '../../../../core/widgets/app_section_header.dart';
-import '../../../properties/presentation/favorite_stub.dart';
 import '../../../properties/domain/entities/property.dart';
 import '../providers/property_discovery_providers.dart';
 import 'discovery_states.dart';
@@ -95,7 +94,7 @@ class _CardList extends StatelessWidget {
               key: ValueKey(p.id), // stable ids as keys
               property: p,
               onTap: () => context.push(Routes.propertyDetails(p.id)),
-              onFavoriteTap: () => onFavoriteTapStub(context), // TODO(Module 07)
+              // Favorite control stays hidden until Module 07 provides a real toggle.
             );
           },
         ),

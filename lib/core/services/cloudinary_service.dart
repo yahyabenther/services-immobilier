@@ -3,23 +3,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
-/// Cloudinary account settings.
-///
-/// SECURITY: the app uses an *unsigned upload preset*, so only the cloud name and the
-/// preset name live in the app. NEVER put the Cloudinary API secret in Flutter code.
-/// In the Cloudinary dashboard (Settings > Upload > Upload presets) make the preset:
-///   - Signing mode: Unsigned
-///   - Asset folder: fixed (e.g. `users`), so uploads cannot go anywhere else
-///   - Allowed formats: jpg, jpeg, png, webp   - and a maximum file size
-class CloudinaryConfig {
-  const CloudinaryConfig._();
-
-  static const cloudName = 'YOUR_CLOUD_NAME'; // TODO: replace
-  static const uploadPreset = 'YOUR_UNSIGNED_PRESET'; // TODO: replace
-
-  static bool get isConfigured =>
-      !cloudName.startsWith('YOUR_') && !uploadPreset.startsWith('YOUR_');
-}
+import '../config/env.dart';
 
 class CloudinaryUploadException implements Exception {
   const CloudinaryUploadException(this.message);
@@ -32,6 +16,11 @@ class CloudinaryUploadException implements Exception {
 /// Uploads an image to Cloudinary and returns its `secure_url`
 /// (`https://res.cloudinary.com/CLOUD/image/upload/v123/FOLDER/ID.jpg`),
 /// the same format `CloudinaryUrl` (core/utils) already knows how to resize.
+/// Reads the cloud name and unsigned upload preset from `.env`
+/// (CLOUDINARY_CLOUD_NAME / CLOUDINARY_UPLOAD_PRESET). NEVER put the API secret
+/// in the app. In the Cloudinary dashboard (Settings > Upload > Upload presets)
+/// make the preset unsigned, with a fixed folder, allowed formats (jpg, png,
+/// webp) and a maximum file size.
 class CloudinaryService {
   CloudinaryService({http.Client? client}) : _client = client ?? http.Client();
 
@@ -45,7 +34,7 @@ class CloudinaryService {
     String? folder,
     String? publicId,
   }) async {
-    if (!CloudinaryConfig.isConfigured) {
+    if (!Env.cloudinaryConfigured) {
       throw const CloudinaryUploadException('Cloudinary is not configured yet.');
     }
     if (bytes.isEmpty) {
@@ -55,9 +44,9 @@ class CloudinaryService {
       throw const CloudinaryUploadException('The image is too large (max 5 MB).');
     }
 
-    final uri = Uri.parse('https://api.cloudinary.com/v1_1/${CloudinaryConfig.cloudName}/image/upload');
+    final uri = Uri.parse('https://api.cloudinary.com/v1_1/${Env.cloudinaryCloudName}/image/upload');
     final request = http.MultipartRequest('POST', uri)
-      ..fields['upload_preset'] = CloudinaryConfig.uploadPreset
+      ..fields['upload_preset'] = Env.cloudinaryUploadPreset
       ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
     if (folder != null) request.fields['folder'] = folder;
     // Unsigned presets may set public_id only if the preset allows it; if you want
