@@ -1,0 +1,30 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+      "indexes": "firestore.indexes.json"
+
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "immofind-556b0",
+          "appId": "1:154527839522:android:1017d363c6a6f20218a17b",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "immofind-556b0",
+          "configurations": {
+            "android": "1:154527839522:android:1017d363c6a6f20218a17b",
+            "ios": "1:154527839522:ios:4a50e4fe03c5dcdb18a17b",
+            "macos": "1:154527839522:ios:4a50e4fe03c5dcdb18a17b",
+            "web": "1:154527839522:web:b94ec1a5fdbaf5c218a17b",
+            "windows": "1:154527839522:web:b0c9d4096e6e19ff18a17b"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "154527839522",
+    "project_id": "immofind-556b0",
+    "storage_bucket": "immofind-556b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154527839522:android:1017d363c6a6f20218a17b",
+        "android_client_info": {
+          "package_name": "com.example.team_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "154527839522-lrlus3iiou5d4u8op60ehmomspl91alg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSAJT6_wr65Q-NuHJV7_h8E1-nSx9HPKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "154527839522-lrlus3iiou5d4u8op60ehmomspl91alg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ---- Module 01: users ---------------------------------------------------
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+
+      allow create: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(
+             ['id', 'name', 'email', 'phone', 'role', 'status', 'verified', 'createdAt'])
+        && request.resource.data.id == uid
+        && request.resource.data.role == 'user'
+        && request.resource.data.status == 'active'
+        && request.resource.data.verified == false
+        && request.resource.data.email == request.auth.token.email;
+
+      // Module 02: notificationPreferences added (Notifications page saves it).
+      allow update: if (isSelf(uid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['name', 'phone', 'photoUrl', 'preferredCity', 'notificationPreferences']))
+        || isAdmin();
+
+      allow delete: if false;
+    }
+
+    // ---- Module 03: public discovery of properties ---------------------------
+    match /properties/{propertyId} {
+      allow read: if resource.data.status == 'published'
+        || (signedIn() && resource.data.ownerId == request.auth.uid)
+        || isAdmin();
+
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

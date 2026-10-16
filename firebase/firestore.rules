@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// ImmoFind security rules (Modules 01-05). Deploy with:
+//   firebase deploy --only firestore:rules,firestore:indexes
+//
+// Principles: users can only touch their own profile and never their role/status;
+// only PUBLISHED listings are publicly readable; admin status is read from the
+// server-side profile, which users cannot edit.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    function isAdmin() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ---- users ---------------------------------------------------------------
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      // Self-registration: always a normal, active, unverified user. A client can
+      // never create itself as owner / agent / admin.
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == 'user'
+        && request.resource.data.status == 'active';
+
+      // Owner may change ONLY these fields. role, status, verified, email, createdAt
+      // are untouchable from the client.
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['name', 'phone', 'preferredCity', 'photoUrl', 'notificationPreferences']);
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ---- properties ------------------------------------------------------------
+    match /properties/{id} {
+      // Public discovery, search and details: published listings only.
+      // Owners keep access to their own non-public listings (My Listings, Module 09+).
+      allow read: if resource.data.status == 'published'
+        || (signedIn() && resource.data.ownerId == request.auth.uid)
+        || isAdmin();
+
+      // TODO(Module 08): let owners / agents create and edit their own listings
+      // (status limited to draft / pending_review, no client writes to views,
+      // favoritesCount, verificationStatus or status 'published').
+      allow write: if isAdmin();
+    }
+  }
+}
