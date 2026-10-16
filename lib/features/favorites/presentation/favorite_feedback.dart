@@ -20,8 +20,10 @@ Future<void> toggleFavoriteWithFeedback(BuildContext context, WidgetRef ref, Str
   void show(String message, {String? actionLabel, VoidCallback? onAction}) {
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
+            ..showSnackBar(SnackBar(
         content: Text(message),
+        duration: const Duration(seconds: 5),
+        persist: false,
         action: actionLabel == null || onAction == null
             ? null
             : SnackBarAction(label: actionLabel, onPressed: onAction),
