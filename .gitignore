@@ -51,3 +51,5 @@ app.*.map.json
 tools/serviceAccountKey.json
 tools/node_modules/
 .env
+
+.env
