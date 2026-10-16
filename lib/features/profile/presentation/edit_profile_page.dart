@@ -1,8 +1,13 @@
 
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../data/profile_repository.dart';
+import '../data/cloudinary_photo_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -14,21 +19,26 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _repository = ProfileRepository();
+  final _photoService = CloudinaryPhotoService();
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
 
   String? _selectedGovernorate;
+  String? _existingPhotoUrl;
+
+  XFile? _selectedPhoto;
+  Uint8List? _selectedPhotoBytes;
 
   bool _loading = true;
   bool _saving = false;
+  bool _choosingPhoto = false;
   String? _error;
 
-  static const navy = Color(0xFF10244A);
-  static const blue = Color(0xFF1769F4);
+  static const Color navy = Color(0xFF10244A);
+  static const Color blue = Color(0xFF1769F4);
 
-  // All 24 governorates of Tunisia.
   static const List<String> tunisianGovernorates = [
     'Ariana',
     'Béja',
@@ -75,7 +85,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final savedCity =
           (data['preferredCity'] ?? '').toString().trim();
 
-      // Accept the saved value even if its capitalization differs.
       String? matchingGovernorate;
 
       for (final governorate in tunisianGovernorates) {
@@ -86,15 +95,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       }
 
+      final photoUrl = (data['photoUrl'] ?? '').toString();
+
       setState(() {
         _selectedGovernorate = matchingGovernorate;
+        _existingPhotoUrl =
+            photoUrl.isEmpty ? null : photoUrl;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
 
       setState(() {
-        _error =
-            'Unable to load your profile. Please try again.';
+        _error = 'Unable to load your profile. Please try again.';
       });
     } finally {
       if (mounted) {
@@ -103,12 +115,98 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
+  void _showMessage(
+    String message, {
+    bool isError = false,
+  }) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
+  }
+
+  Future<void> _choosePhoto() async {
+    if (_saving || _choosingPhoto) return;
+
+    setState(() => _choosingPhoto = true);
+
+    try {
+      final photo = await _photoService.pickPhoto();
+
+      if (photo == null) return;
+
+      final size = await photo.length();
+      final extension = photo.name.split('.').last.toLowerCase();
+
+      if (size > CloudinaryPhotoService.maxFileSize) {
+        _showMessage(
+          'Image must be smaller than 2 MB.',
+          isError: true,
+        );
+        return;
+      }
+
+      if (!CloudinaryPhotoService.allowedExtensions
+          .contains(extension)) {
+        _showMessage(
+          'Please select JPG, PNG or WebP.',
+          isError: true,
+        );
+        return;
+      }
+
+      final bytes = await photo.readAsBytes();
+
+      if (bytes.isEmpty) {
+        _showMessage(
+          'The selected image is empty.',
+          isError: true,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _selectedPhoto = photo;
+        _selectedPhotoBytes = bytes;
+      });
+    } catch (_) {
+      _showMessage(
+        'Unable to select the image.',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _choosingPhoto = false);
+      }
+    }
+  }
+
   Future<void> _saveProfile() async {
-    if (_saving || !_formKey.currentState!.validate()) {
+    if (_saving || _loading || !_formKey.currentState!.validate()) {
       return;
     }
 
     if (_selectedGovernorate == null) {
+      _showMessage(
+        'Please select a governorate.',
+        isError: true,
+      );
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      _showMessage(
+        'Please log in again.',
+        isError: true,
+      );
       return;
     }
 
@@ -117,39 +215,53 @@ class _EditProfilePageState extends State<EditProfilePage> {
     try {
       final name = _nameController.text.trim();
 
-      await _repository.updateProfile(
-        name: name,
-        phone: _phoneController.text,
-        preferredCity: _selectedGovernorate!,
-      );
+      final updates = <String, dynamic>{
+        'name': name,
+        'phone': _phoneController.text.trim(),
+        'preferredCity': _selectedGovernorate!,
+      };
 
-      // Synchronize the display name with Firebase Authentication.
-      final user = FirebaseAuth.instance.currentUser;
+      if (_selectedPhoto != null) {
+        final photoUrl =
+            await _photoService.uploadPhoto(_selectedPhoto!);
 
-      if (user != null) {
+        updates['photoUrl'] = photoUrl;
+      }
+
+      // Save profile fields together in Firestore.
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update(updates);
+
+      // Firestore is the main source of profile information.
+      // Updating Firebase Auth's display name is best-effort.
+      try {
         await user.updateDisplayName(name);
+      } catch (_) {
+        // The profile data has already been saved in Firestore.
       }
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showMessage('Profile updated successfully!');
 
       Navigator.of(context).pop(true);
-    } catch (e) {
+    } on FirebaseException catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Unable to save your changes. Please try again.',
-          ),
-          backgroundColor: Colors.red,
-        ),
+      _showMessage(
+        e.code == 'permission-denied'
+            ? 'Permission denied. Check Firestore Rules.'
+            : 'Unable to save your profile. Please try again.',
+        isError: true,
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Photo upload or profile save failed. Please try again.',
+        isError: true,
       );
     } finally {
       if (mounted) {
@@ -193,6 +305,73 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  Widget _buildPhotoPicker() {
+    ImageProvider? avatarImage;
+
+    if (_selectedPhotoBytes != null) {
+      avatarImage = MemoryImage(_selectedPhotoBytes!);
+    } else if (_existingPhotoUrl != null) {
+      avatarImage = NetworkImage(_existingPhotoUrl!);
+    }
+
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 52,
+          backgroundColor: const Color(0xFFE1EAFF),
+          backgroundImage: avatarImage,
+          child: avatarImage == null
+              ? const Icon(
+                  Icons.person,
+                  size: 52,
+                  color: blue,
+                )
+              : null,
+        ),
+        const SizedBox(height: 14),
+        OutlinedButton.icon(
+          onPressed: (_saving || _choosingPhoto)
+              ? null
+              : _choosePhoto,
+          icon: const Icon(Icons.photo_camera_outlined),
+          label: Text(
+            _choosingPhoto ? 'Opening...' : 'Change Photo',
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'JPG, PNG or WebP · Maximum 2 MB',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 12,
+          ),
+        ),
+        if (_selectedPhoto != null) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'New photo selected. Save Changes to upload it.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: blue,
+              fontSize: 12,
+            ),
+          ),
+          TextButton(
+            onPressed: _saving
+                ? null
+                : () {
+                    setState(() {
+                      _selectedPhoto = null;
+                      _selectedPhotoBytes = null;
+                    });
+                  },
+            child: const Text('Cancel Photo Change'),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -203,9 +382,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         foregroundColor: navy,
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(
                   child: Padding(
@@ -228,16 +405,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           crossAxisAlignment:
                               CrossAxisAlignment.stretch,
                           children: [
-                            const CircleAvatar(
-                              radius: 44,
-                              backgroundColor:
-                                  Color(0xFFE1EAFF),
-                              child: Icon(
-                                Icons.person,
-                                size: 48,
-                                color: blue,
-                              ),
-                            ),
+                            _buildPhotoPicker(),
 
                             const SizedBox(height: 28),
 
@@ -310,8 +478,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       });
                                     },
                               validator: (value) {
-                                if (value == null ||
-                                    value.isEmpty) {
+                                if (value == null || value.isEmpty) {
                                   return 'Please select a governorate';
                                 }
                                 return null;
@@ -321,19 +488,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             const SizedBox(height: 30),
 
                             FilledButton.icon(
-                              onPressed:
-                                  _saving ? null : _saveProfile,
+                              onPressed: _saving ? null : _saveProfile,
                               style: FilledButton.styleFrom(
                                 backgroundColor: blue,
-                                padding:
-                                    const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(16),
                               ),
                               icon: _saving
                                   ? const SizedBox(
                                       width: 18,
                                       height: 18,
-                                      child:
-                                          CircularProgressIndicator(
+                                      child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         color: Colors.white,
                                       ),
@@ -343,7 +507,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     ),
                               label: Text(
                                 _saving
-                                    ? 'Saving...'
+                                    ? 'Uploading and Saving...'
                                     : 'Save Changes',
                               ),
                             ),

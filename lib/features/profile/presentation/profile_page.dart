@@ -174,6 +174,51 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     );
   }
 
+  Widget _buildProfileAvatar(String photoUrl) {
+    if (photoUrl.isEmpty) {
+      return const CircleAvatar(
+        radius: 48,
+        backgroundColor: Color(0xFFE1EAFF),
+        child: Icon(
+          Icons.person,
+          color: blue,
+          size: 54,
+        ),
+      );
+    }
+
+    return ClipOval(
+      child: Image.network(
+        photoUrl,
+        width: 96,
+        height: 96,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const CircleAvatar(
+            radius: 48,
+            backgroundColor: Color(0xFFE1EAFF),
+            child: Icon(
+              Icons.person,
+              color: blue,
+              size: 54,
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+
+          return const SizedBox(
+            width: 96,
+            height: 96,
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authUser = FirebaseAuth.instance.currentUser;
@@ -238,6 +283,9 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
 
           final governorate =
               (data['preferredCity'] ?? '').toString();
+
+          final photoUrl =
+              (data['photoUrl'] ?? '').toString();
 
           final role =
               (data['role'] ?? 'user').toString();

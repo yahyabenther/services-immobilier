@@ -76,7 +76,7 @@ class _WelcomePageState extends State<WelcomePage>
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildHeader(isMobile),
+              _buildHeader(),
               FadeTransition(
                 opacity: _animation,
                 child: Column(
@@ -95,43 +95,87 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
-  
-Widget _buildHeader(bool isMobile) {
-  return Container(
-    width: double.infinity,
-    color: Colors.white,
-    padding: EdgeInsets.symmetric(
-      horizontal: isMobile ? 16 : 40,
-      vertical: 14,
-    ),
-    child: Row(
-      children: [
-        const AppLogo(light: false, size: 30),
-        const Spacer(),
-        if (!isMobile)
-          TextButton(
-            onPressed: () => context.push(Routes.login),
-            child: const Text('Log In'),
+  Widget _buildHeader() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
+        final isVerySmall = constraints.maxWidth < 370;
+
+        return Container(
+          width: double.infinity,
+          color: Colors.white,
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 12 : 40,
+            vertical: 12,
           ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: isMobile ? 110 : 160,
-          child: FilledButton(
-            onPressed: () => context.push(Routes.register),
-            style: FilledButton.styleFrom(
-              backgroundColor: blue,
-            ),
-            child: Text(
-              isMobile ? 'Sign Up' : 'Create Account',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+          child: Row(
+            children: [
+              // Responsive logo
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: AppLogo(
+                      light: false,
+                      size: isVerySmall ? 22 : (isMobile ? 25 : 30),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Log In button: visible on ALL screen sizes
+              TextButton(
+                onPressed: () => context.push(Routes.login),
+                style: TextButton.styleFrom(
+                  foregroundColor: navy,
+                  minimumSize: const Size(55, 40),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isVerySmall ? 5 : 10,
+                  ),
+                ),
+                child: const Text(
+                  'Log In',
+                  maxLines: 1,
+                ),
+              ),
+
+              const SizedBox(width: 4),
+
+              // Sign Up button
+              SizedBox(
+                width: isVerySmall
+                    ? 76
+                    : (isMobile ? 90 : 160),
+                child: FilledButton(
+                  onPressed: () => context.push(Routes.register),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: blue,
+                    minimumSize: const Size(0, 42),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                    ),
+                  ),
+                  child: Text(
+                    isMobile ? 'Sign Up' : 'Create Account',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: isVerySmall ? 12 : 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
-    ),
-  );
-}
+        );
+      },
+    );
+  }
 
   Widget _buildHero(bool isMobile) {
     return Container(
