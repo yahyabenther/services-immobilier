@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import '../lib/core/errors/auth_failure.dart';
-import '../lib/features/auth/domain/entities/auth_user.dart';
-import '../lib/features/auth/domain/repositories/auth_repository.dart';
+import 'package:team_app/core/errors/auth_failure.dart';
+import 'package:team_app/features/auth/domain/entities/auth_user.dart';
+import 'package:team_app/features/auth/domain/repositories/auth_repository.dart';
 
 class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({this.failLoginWith});

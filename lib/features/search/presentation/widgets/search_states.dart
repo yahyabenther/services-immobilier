@@ -12,8 +12,8 @@ class SearchLoadingList extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         itemCount: 3,
-        separatorBuilder: (_, __) => const SizedBox(height: 14),
-        itemBuilder: (_, __) => const PropertyCardSkeleton(width: double.infinity),
+        separatorBuilder: (_, _) => const SizedBox(height: 14),
+        itemBuilder: (_, _) => const PropertyCardSkeleton(width: double.infinity),
       );
 }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/core/theme/app_theme.dart';
-import '../lib/features/auth/presentation/pages/login_page.dart';
-import '../lib/features/auth/providers/auth_provider.dart';
+import 'package:team_app/core/theme/app_theme.dart';
+import 'package:team_app/features/auth/presentation/pages/login_page.dart';
+import 'package:team_app/features/auth/providers/auth_provider.dart';
 
 import 'fake_auth_repository.dart';
 

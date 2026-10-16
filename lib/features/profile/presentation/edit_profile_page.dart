@@ -1,19 +1,22 @@
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/tunisia_governorates.dart';
+import '../../../core/utils/validators.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../data/profile_repository.dart';
 
-class EditProfilePage extends StatefulWidget {
+class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final _repository = ProfileRepository();
+  ProfileRepository get _repository => ref.read(profileRepositoryProvider);
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -28,33 +31,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   static const navy = Color(0xFF10244A);
   static const blue = Color(0xFF1769F4);
 
-  // All 24 governorates of Tunisia.
-  static const List<String> tunisianGovernorates = [
-    'Ariana',
-    'Béja',
-    'Ben Arous',
-    'Bizerte',
-    'Gabès',
-    'Gafsa',
-    'Jendouba',
-    'Kairouan',
-    'Kasserine',
-    'Kébili',
-    'Le Kef',
-    'Mahdia',
-    'La Manouba',
-    'Médenine',
-    'Monastir',
-    'Nabeul',
-    'Sfax',
-    'Sidi Bouzid',
-    'Siliana',
-    'Sousse',
-    'Tataouine',
-    'Tozeur',
-    'Tunis',
-    'Zaghouan',
-  ];
+  // Single source of truth shared with Home and Search (core/constants).
+  static const List<String> tunisianGovernorates = tunisiaGovernorates;
 
   @override
   void initState() {
@@ -72,8 +50,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _emailController.text = (data['email'] ?? '').toString();
       _phoneController.text = (data['phone'] ?? '').toString();
 
-      final savedCity =
+      var savedCity =
           (data['preferredCity'] ?? '').toString().trim();
+      // Older profiles used the spelling "La Manouba"; the canonical one is "Manouba".
+      if (savedCity.toLowerCase() == 'la manouba') savedCity = 'Manouba';
 
       // Accept the saved value even if its capitalization differs.
       String? matchingGovernorate;
@@ -108,10 +88,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
-    if (_selectedGovernorate == null) {
-      return;
-    }
-
     setState(() => _saving = true);
 
     try {
@@ -119,16 +95,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       await _repository.updateProfile(
         name: name,
-        phone: _phoneController.text,
+        // Same normalisation as registration (+216XXXXXXXX).
+        phone: Validators.normalizePhone(_phoneController.text),
         preferredCity: _selectedGovernorate!,
       );
 
-      // Synchronize the display name with Firebase Authentication.
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        await user.updateDisplayName(name);
-      }
+      // Keep the Firebase Auth display name in sync (best effort: the profile
+      // document is the source of truth and is already saved).
+      try {
+        await ref.read(firebaseAuthProvider).currentUser?.updateDisplayName(name);
+      } catch (_) {}
 
       if (!mounted) return;
 
@@ -210,9 +186,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_error!, textAlign: TextAlign.center),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () {
+                            setState(() {
+                              _error = null;
+                              _loading = true;
+                            });
+                            _loadProfile();
+                          },
+                          child: const Text('Try again'),
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -245,13 +234,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               label: 'Full Name',
                               controller: _nameController,
                               icon: Icons.person_outline,
-                              validator: (value) {
-                                if (value == null ||
-                                    value.trim().isEmpty) {
-                                  return 'Please enter your full name';
-                                }
-                                return null;
-                              },
+                              validator: Validators.fullName,
                             ),
 
                             const SizedBox(height: 16),
@@ -270,6 +253,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               controller: _phoneController,
                               icon: Icons.phone_outlined,
                               keyboardType: TextInputType.phone,
+                              validator: Validators.phone,
                             ),
 
                             const SizedBox(height: 16),

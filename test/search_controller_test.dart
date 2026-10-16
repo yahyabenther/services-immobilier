@@ -27,7 +27,7 @@ ProviderContainer make(FakeSearchRepository repo, {FakeLocationService? location
 
 void main() {
   test('first visit loads the default feed once', () async {
-    final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 3)));
+    final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 3)));
     final c = make(repo);
     final ctrl = c.read(searchResultsProvider.notifier);
     expect(c.read(searchResultsProvider).status, SearchStatus.idle);
@@ -41,14 +41,14 @@ void main() {
   });
 
   test('no results -> empty state', () async {
-    final c = make(FakeSearchRepository((_, __) async => pageOf(const [])));
+    final c = make(FakeSearchRepository((_, _) async => pageOf(const [])));
     await c.read(searchResultsProvider.notifier).ensureLoaded();
     expect(c.read(searchResultsProvider).status, SearchStatus.empty);
   });
 
   test('failure -> error with a friendly message; retry recovers and keeps the filter', () async {
     var fail = true;
-    final repo = FakeSearchRepository((_, __) async {
+    final repo = FakeSearchRepository((_, _) async {
       if (fail) throw const DiscoveryFailure(DiscoveryFailureType.network);
       return pageOf(props('a', 2));
     });
@@ -70,7 +70,7 @@ void main() {
   test('an older, slower response never overwrites a newer one', () async {
     final slow = Completer<SearchResultPage>();
     var n = 0;
-    final repo = FakeSearchRepository((_, __) {
+    final repo = FakeSearchRepository((_, _) {
       n++;
       return n == 1 ? slow.future : Future.value(pageOf(props('new', 2)));
     });
@@ -129,7 +129,7 @@ void main() {
   });
 
   test('typing is debounced: one request for a burst of keystrokes', () async {
-    final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+    final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
     final c = make(repo);
     final ctrl = c.read(searchResultsProvider.notifier);
     await ctrl.ensureLoaded();
@@ -145,7 +145,7 @@ void main() {
   });
 
   test('clearAll removes filters but keeps the sort', () async {
-    final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+    final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
     final c = make(repo);
     final ctrl = c.read(searchResultsProvider.notifier);
     await ctrl.applyFilter(const PropertySearchFilter(sort: SortOption.lowestPrice, minPrice: 5)
@@ -158,7 +158,7 @@ void main() {
   });
 
   test('Home shortcut params set the real filter, and the same params do not reload', () async {
-    final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+    final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
     final c = make(repo);
     final ctrl = c.read(searchResultsProvider.notifier);
     await ctrl.applyRouteParams({'transactionType': 'rent', 'governorate': 'Sousse'});
@@ -178,7 +178,7 @@ void main() {
 
   group('Closest sort', () {
     test('without any location and with permission denied -> not applied', () async {
-      final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+      final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
       final location = FakeLocationService(const DeviceLocationDenied());
       final c = make(repo, location: location);
       final ctrl = c.read(searchResultsProvider.notifier);
@@ -191,7 +191,7 @@ void main() {
     });
 
     test('permission granted -> applied with a real reference location', () async {
-      final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+      final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
       final c = make(repo, location: FakeLocationService(const DeviceLocationGranted(36.8, 10.2)));
       final ctrl = c.read(searchResultsProvider.notifier);
       final outcome = await ctrl.setSort(SortOption.closest);
@@ -202,7 +202,7 @@ void main() {
     });
 
     test('reuses the device location chosen on Home (no second permission prompt)', () async {
-      final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+      final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
       final location = FakeLocationService(const DeviceLocationGranted(35.8, 10.6));
       final c = make(repo, location: location);
       await c.read(selectedLocationProvider.notifier).useDeviceLocation();
@@ -215,7 +215,7 @@ void main() {
     });
 
     test('other sorts never touch location', () async {
-      final repo = FakeSearchRepository((_, __) async => pageOf(props('a', 1)));
+      final repo = FakeSearchRepository((_, _) async => pageOf(props('a', 1)));
       final location = FakeLocationService();
       final c = make(repo, location: location);
       await c.read(searchResultsProvider.notifier).setSort(SortOption.highestPrice);

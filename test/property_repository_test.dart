@@ -17,7 +17,7 @@ RawPropertyDoc doc(String id, {String status = 'published', String tx = 'buy', S
         'propertyType': type,
         'price': price,
         'governorate': 'Tunis',
-        if (city != null) 'city': city,
+        'city': ?city,
         'status': status,
         'verificationStatus': 'approved',
         'publishedAt': Timestamp.fromDate(DateTime(2026, 10, 1)),

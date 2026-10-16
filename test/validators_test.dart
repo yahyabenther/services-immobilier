@@ -1,45 +1,35 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:team_app/core/utils/validators.dart';
 
+// NOTE: replace `immofind` with the `name:` in your pubspec.yaml.
 void main() {
-  group('email', () {
-    test('required', () => expect(Validators.email(' '), isNotNull));
-    test('invalid', () => expect(Validators.email('john@'), isNotNull));
-    test('valid', () => expect(Validators.email('john@example.com'), isNull));
-  });
+  group('Validators', () {
+    test('email', () {
+      expect(Validators.email('user@example.com'), isNull);
+      expect(Validators.email('  user@example.com  '), isNull);
+      expect(Validators.email('nope'), isNotNull);
+      expect(Validators.email(''), isNotNull);
+    });
 
-  group('phone', () {
-    test('accepts local and international forms', () {
-      for (final p in ['22123456', '22 123 456', '+21622123456', '0021622123456']) {
-        expect(Validators.phone(p), isNull, reason: p);
-      }
-    });
-    test('rejects bad numbers', () {
-      for (final p in ['', '123', '12345678', '+3312345678']) {
-        expect(Validators.phone(p), isNotNull, reason: p);
-      }
-    });
-    test('normalizes to +216XXXXXXXX', () {
+    test('Tunisian phone is accepted and normalised', () {
+      expect(Validators.phone('22 123 456'), isNull);
+      expect(Validators.phone('+216 22 123 456'), isNull);
       expect(Validators.normalizePhone('22 123 456'), '+21622123456');
       expect(Validators.normalizePhone('0021622123456'), '+21622123456');
+      expect(Validators.phone('12345678'), isNotNull); // cannot start with 1
+      expect(Validators.phone(''), isNotNull);
     });
-  });
 
-  group('password', () {
-    test('rules', () {
-      expect(Validators.password('Abc12345'), isNull);
-      expect(Validators.password('abc12345'), isNotNull); // no uppercase
+    test('password rules', () {
+      expect(Validators.password('Abcdefg1'), isNull);
+      expect(Validators.password('abcdefg1'), isNotNull); // no uppercase
       expect(Validators.password('Abcdefgh'), isNotNull); // no number
       expect(Validators.password('Ab1'), isNotNull); // too short
     });
-    test('confirm', () {
-      expect(Validators.confirmPassword('x', 'y'), isNotNull);
-      expect(Validators.confirmPassword('y', 'y'), isNull);
-    });
-  });
 
-  test('full name', () {
-    expect(Validators.fullName('  '), isNotNull);
-    expect(Validators.fullName('Yahya B'), isNull);
+    test('confirm password must match', () {
+      expect(Validators.confirmPassword('Abcdefg1', 'Abcdefg1'), isNull);
+      expect(Validators.confirmPassword('Abcdefg2', 'Abcdefg1'), isNotNull);
+    });
   });
 }

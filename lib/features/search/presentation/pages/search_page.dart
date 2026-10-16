@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart' show mapEquals;
 
+import '../../../../app/routes.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../favorites/presentation/widgets/favorite_property_card.dart';
+import '../../../property_discovery/presentation/widgets/property_card.dart';
 import '../../providers/search_providers.dart';
 import '../../providers/search_state.dart';
 import '../widgets/active_filter_chips.dart';
@@ -35,9 +36,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   void initState() {
     super.initState();
-    _query = TextEditingController(
-      text: ref.read(searchResultsProvider).filter.queryText ?? '',
-    );
+    _query = TextEditingController(text: ref.read(searchResultsProvider).filter.queryText ?? '');
     _scroll.addListener(_onScroll);
     Future.microtask(() async {
       final c = ref.read(searchResultsProvider.notifier);
@@ -62,8 +61,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void _onScroll() {
-    if (_scroll.hasClients &&
-        _scroll.position.pixels >= _scroll.position.maxScrollExtent - 320) {
+    if (_scroll.hasClients && _scroll.position.pixels >= _scroll.position.maxScrollExtent - 320) {
       ref.read(searchResultsProvider.notifier).loadMore();
     }
   }
@@ -82,10 +80,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   Future<void> _openSort() async {
     final c = ref.read(searchResultsProvider.notifier);
-    final picked = await showSearchSortSheet(
-      context,
-      ref.read(searchResultsProvider).filter.sort,
-    );
+    final picked = await showSearchSortSheet(context, ref.read(searchResultsProvider).filter.sort);
     if (picked == null || !mounted) return;
     final outcome = await c.setSort(picked);
     if (!mounted) return;
@@ -95,9 +90,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       case ClosestOutcome.denied:
         _snack('Location permission is needed to sort by distance.');
       case ClosestOutcome.deniedForever:
-        _snack(
-          'Location is blocked for ImmoFind. Enable it in system settings to sort by distance.',
-        );
+        _snack('Location is blocked for ImmoFind. Enable it in system settings to sort by distance.');
       case ClosestOutcome.serviceDisabled:
         _snack('Turn on location services to sort by distance.');
       case ClosestOutcome.error:
@@ -111,122 +104,94 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final c = ref.read(searchResultsProvider.notifier);
 
     // Keep the text box in sync when the query is cleared elsewhere (Clear all, chips).
-    ref.listen<String>(
-      searchResultsProvider.select((st) => st.filter.queryText ?? ''),
-      (_, next) {
-        if (next != _query.text.trim()) _query.text = next;
-      },
-    );
+    ref.listen<String>(searchResultsProvider.select((st) => st.filter.queryText ?? ''), (_, next) {
+      if (next != _query.text.trim()) _query.text = next;
+    });
 
     final count = s.items.length;
     final countLabel = s.isLoading
         ? 'Searching...'
         : s.status == SearchStatus.error
-        ? ''
-        : '$count${s.hasMore ? '+' : ''} ${count == 1 && !s.hasMore ? 'property' : 'properties'}';
+            ? ''
+            : '$count${s.hasMore ? '+' : ''} ${count == 1 && !s.hasMore ? 'property' : 'properties'}';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FD),
       body: SafeArea(
-        child: Column(
-          children: [
-            // ---- search box + filters button ----
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _query,
-                      textInputAction: TextInputAction.search,
-                      onChanged: c.setQueryText,
-                      onSubmitted: (v) => c.setQueryText(v),
-                      decoration: InputDecoration(
-                        hintText: 'City, neighborhood or keyword',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: _query,
-                          builder: (_, v, __) => v.text.isEmpty
-                              ? const SizedBox.shrink()
-                              : IconButton(
-                                  tooltip: 'Clear search',
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _query.clear();
-                                    c.setQueryText('');
-                                  },
-                                ),
-                        ),
-                      ),
+        child: Column(children: [
+          // ---- search box + filters button ----
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(children: [
+              Expanded(
+                child: TextField(
+                  controller: _query,
+                  textInputAction: TextInputAction.search,
+                  onChanged: c.setQueryText,
+                  onSubmitted: (v) => c.setQueryText(v),
+                  decoration: InputDecoration(
+                    hintText: 'City, neighborhood or keyword',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _query,
+                      builder: (_, v, _) => v.text.isEmpty
+                          ? const SizedBox.shrink()
+                          : IconButton(
+                              tooltip: 'Clear search',
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _query.clear();
+                                c.setQueryText('');
+                              },
+                            ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Badge(
-                    label: Text('${s.filter.activeFilterCount}'),
-                    isLabelVisible: s.filter.activeFilterCount > 0,
-                    child: IconButton.filledTonal(
-                      tooltip: 'Filters',
-                      onPressed: _openFilters,
-                      icon: const Icon(Icons.tune_rounded),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            ListingTabBar(selected: s.filter.tab, onSelected: c.setTab),
-            const SizedBox(height: 4),
-            ActiveFilterChips(
-              filter: s.filter,
-              onChanged: c.applyFilter,
-              onClearAll: c.clearAll,
-            ),
-            // ---- count / sort / view switch ----
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      countLabel,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.text,
-                      ),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: _openSort,
-                    icon: const Icon(Icons.swap_vert_rounded, size: 18),
-                    label: Text(s.filter.sort.label),
-                  ),
-                  SegmentedButton<SearchViewMode>(
-                    showSelectedIcon: false,
-                    style: const ButtonStyle(
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    segments: const [
-                      ButtonSegment(
-                        value: SearchViewMode.list,
-                        icon: Icon(Icons.view_agenda_outlined),
-                        tooltip: 'List',
-                      ),
-                      ButtonSegment(
-                        value: SearchViewMode.map,
-                        icon: Icon(Icons.map_outlined),
-                        tooltip: 'Map',
-                      ),
-                    ],
-                    selected: {s.viewMode},
-                    onSelectionChanged: (v) => c.setViewMode(v.first),
-                  ),
-                  const SizedBox(width: 8),
-                ],
+              const SizedBox(width: 10),
+              Badge(
+                label: Text('${s.filter.activeFilterCount}'),
+                isLabelVisible: s.filter.activeFilterCount > 0,
+                child: IconButton.filledTonal(
+                  tooltip: 'Filters',
+                  onPressed: _openFilters,
+                  icon: const Icon(Icons.tune_rounded),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Expanded(child: _body(s)),
-          ],
-        ),
+            ]),
+          ),
+          ListingTabBar(selected: s.filter.tab, onSelected: c.setTab),
+          const SizedBox(height: 4),
+          ActiveFilterChips(filter: s.filter, onChanged: c.applyFilter, onClearAll: c.clearAll),
+          // ---- count / sort / view switch ----
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+            child: Row(children: [
+              Expanded(
+                child: Text(countLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.text)),
+              ),
+              TextButton.icon(
+                onPressed: _openSort,
+                icon: const Icon(Icons.swap_vert_rounded, size: 18),
+                label: Text(s.filter.sort.label),
+              ),
+              SegmentedButton<SearchViewMode>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                segments: const [
+                  ButtonSegment(value: SearchViewMode.list, icon: Icon(Icons.view_agenda_outlined), tooltip: 'List'),
+                  ButtonSegment(value: SearchViewMode.map, icon: Icon(Icons.map_outlined), tooltip: 'Map'),
+                ],
+                selected: {s.viewMode},
+                onSelectionChanged: (v) => c.setViewMode(v.first),
+              ),
+              const SizedBox(width: 8),
+            ]),
+          ),
+          const SizedBox(height: 4),
+          Expanded(child: _body(s)),
+        ]),
       ),
     );
   }
@@ -267,16 +232,17 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                 itemCount: s.items.length + 1,
                 itemBuilder: (context, i) {
-                  if (i == s.items.length)
-                    return _Footer(state: s, onMore: c.loadMore);
+                  if (i == s.items.length) return _Footer(state: s, onMore: c.loadMore);
                   final p = s.items[i];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: FavoritePropertyCard(
+                    child: PropertyCard(
                       key: ValueKey(p.id),
                       property: p,
                       width: double.infinity,
                       distanceKm: s.distancesKm[p.id],
+                      onTap: () => context.push(Routes.propertyDetails(p.id)),
+                      // Favorite control stays hidden until Module 07 provides a real toggle.
                     ),
                   );
                 },
@@ -299,13 +265,7 @@ class _Footer extends StatelessWidget {
     if (state.isLoadingMore) {
       return const Padding(
         padding: EdgeInsets.all(16),
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2.4),
-          ),
-        ),
+        child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.4))),
       );
     }
     if (state.loadMoreFailed) {
@@ -318,9 +278,7 @@ class _Footer extends StatelessWidget {
       );
     }
     if (state.hasMore) {
-      return Center(
-        child: TextButton(onPressed: onMore, child: const Text('Load more')),
-      );
+      return Center(child: TextButton(onPressed: onMore, child: const Text('Load more')));
     }
     return const SizedBox(height: 8);
   }

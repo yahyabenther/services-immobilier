@@ -31,6 +31,8 @@ class PropertyMapper {
       id: id,
       ownerId: owner,
       agentId: _string(d['agentId']),
+      ownerName: _string(d['ownerName']),
+      ownerRole: _string(d['ownerRole']),
       title: title,
       description: _string(d['description']) ?? '',
       transactionType: tx,

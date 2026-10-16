@@ -89,7 +89,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
             const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: C.amber.withOpacity(.12), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: C.amber.withValues(alpha: .12), borderRadius: BorderRadius.circular(10)),
               child: const Text(
                 'Mode démo : admin@immofind.tn / Admin#2026\n'
                 'À remplacer par Firebase Auth + custom claims avant la production.',

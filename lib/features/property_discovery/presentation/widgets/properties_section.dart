@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/routes.dart';
 import '../../../../core/widgets/app_section_header.dart';
-import '../../../favorites/providers/favorite_providers.dart';
 import '../../../properties/domain/entities/property.dart';
 import '../providers/property_discovery_providers.dart';
 import 'discovery_states.dart';
@@ -33,30 +32,20 @@ class PropertiesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = data.value;
+    final value = data.value; // previous value is kept while refreshing
     final showSeeAll = value != null && !value.hasError && value.items.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppSectionHeader(
-          title: title,
-          subtitle: subtitle,
-          onSeeAll: showSeeAll ? onSeeAll : null,
-        ),
+        AppSectionHeader(title: title, subtitle: subtitle, onSeeAll: showSeeAll ? onSeeAll : null),
         const SizedBox(height: 10),
         if (value == null)
           data.hasError
-              ? DiscoveryErrorState(
-                  message: 'Something went wrong.',
-                  onRetry: onRetry,
-                )
+              ? DiscoveryErrorState(message: 'Something went wrong.', onRetry: onRetry)
               : const _SkeletonList()
         else if (value.hasError)
-          DiscoveryErrorState(
-            message: value.error!,
-            onRetry: onRetry,
-          )
+          DiscoveryErrorState(message: value.error!, onRetry: onRetry)
         else if (value.isEmpty)
           empty
         else
@@ -66,14 +55,10 @@ class PropertiesSection extends StatelessWidget {
   }
 }
 
-
 double _listHeight(BuildContext context) {
-  final scale =
-      (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(1.0, 1.4);
-
+  final scale = (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(1.0, 1.4);
   return 282 * scale;
 }
-
 
 class _SkeletonList extends StatelessWidget {
   const _SkeletonList();
@@ -85,56 +70,31 @@ class _SkeletonList extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 3,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, __) => const PropertyCardSkeleton(),
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (_, _) => const PropertyCardSkeleton(),
         ),
       );
 }
 
-
-class _CardList extends ConsumerWidget {
-  const _CardList({
-    required this.items,
-  });
-
+class _CardList extends StatelessWidget {
+  const _CardList({required this.items});
   final List<Property> items;
 
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) => SizedBox(
+  Widget build(BuildContext context) => SizedBox(
         height: _listHeight(context),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, i) {
-
             final p = items[i];
-
-            final isFavorite =
-                ref.watch(favoriteStatusProvider(p.id)).value ?? false;
-
-
             return PropertyCard(
-              key: ValueKey(p.id),
+              key: ValueKey(p.id), // stable ids as keys
               property: p,
-
-              onTap: () =>
-                  context.push(Routes.propertyDetails(p.id)),
-
-
-              isFavorite: isFavorite,
-
-
-              onFavoriteTap: () async {
-
-                await ref
-                    .read(favoriteToggleProvider)(
-                      propertyId: p.id,
-                    );
-
-              },
+              onTap: () => context.push(Routes.propertyDetails(p.id)),
+              // Favorite control stays hidden until Module 07 provides a real toggle.
             );
           },
         ),

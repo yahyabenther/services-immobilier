@@ -30,8 +30,8 @@ class PropertyImage extends StatelessWidget {
       imageUrl: resolved,
       fit: fit,
       fadeInDuration: const Duration(milliseconds: 150),
-      placeholder: (_, __) => const _Placeholder(loading: true),
-      errorWidget: (_, __, ___) => const _Placeholder(),
+      placeholder: (_, _) => const _Placeholder(loading: true),
+      errorWidget: (_, _, _) => const _Placeholder(),
     );
   }
 }

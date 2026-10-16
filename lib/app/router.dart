@@ -11,8 +11,9 @@ import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/providers/auth_provider.dart';
+import '../features/map/presentation/pages/map_page.dart'; // Module 06
 import '../features/profile/presentation/profile_page.dart'; // Module 02
-import '../features/properties/presentation/property_details_stub_page.dart'; // replaced by Module 05
+import '../features/properties/presentation/pages/property_details_page.dart'; // Module 05
 import '../features/property_discovery/presentation/screens/home_discovery_screen.dart';
 import '../features/search/presentation/pages/search_page.dart'; // Module 04
 import '../features/favorites/presentation/pages/favorites_page.dart'; // Module 07
@@ -63,8 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: Routes.map,
-              builder: (_, state) =>
-                  ComingSoonPage(title: 'Map', module: 'Module 06', params: state.uri.queryParameters),
+              builder: (_, state) => MapPage(params: state.uri.queryParameters), // Module 06
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -81,8 +81,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ---- Full-screen pages pushed on top of the shell --------------------
       GoRoute(
-        path: '/property/:id',
-        builder: (_, state) => PropertyDetailsStubPage(propertyId: state.pathParameters['id'] ?? ''),
+        path: Routes.propertyDetailsPattern,
+        builder: (_, state) => PropertyDetailsPage(propertyId: state.pathParameters['id'] ?? ''),
       ),
       GoRoute(
         path: Routes.publish,

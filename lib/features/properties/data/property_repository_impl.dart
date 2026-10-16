@@ -48,7 +48,7 @@ class PropertyRepositoryImpl implements PropertyRepository {
         final raw = await _ds.fetchRecentInGovernorate(property.governorate, limit: _similarWindow);
         final parsed = <Property>[
           for (final r in raw)
-            if (PropertyMapper.tryFromMap(r.id, r.data) case final p?) p,
+            ?PropertyMapper.tryFromMap(r.id, r.data),
         ];
         return SimilarPropertyRanker.rank(property, parsed, limit: limit);
       });

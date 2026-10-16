@@ -35,7 +35,7 @@ class _UsersPageState extends State<UsersPage> {
     return SizedBox(
       width: 170,
       child: DropdownButtonFormField<T?>(
-        value: value,
+        initialValue: value,
         isExpanded: true,
         decoration: InputDecoration(labelText: label),
         items: [
@@ -74,7 +74,7 @@ class _UsersPageState extends State<UsersPage> {
             for (final u in list)
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: C.navy.withOpacity(.1),
+                  backgroundColor: C.navy.withValues(alpha: .1),
                   child: Text(u.name.isEmpty ? '?' : u.name[0], style: const TextStyle(color: C.navy, fontWeight: FontWeight.w800)),
                 ),
                 title: Text(u.name, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -204,7 +204,7 @@ class UserDetailsPage extends StatelessWidget {
           title: Text('Suspendre ${u.name}'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             DropdownButtonFormField<Duration?>(
-              value: duration,
+              initialValue: duration,
               decoration: const InputDecoration(labelText: 'Durée'),
               items: const [
                 DropdownMenuItem(value: Duration(hours: 24), child: Text('24 heures')),

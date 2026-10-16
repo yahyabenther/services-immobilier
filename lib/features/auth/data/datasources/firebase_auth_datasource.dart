@@ -58,9 +58,28 @@ class FirebaseAuthDatasource {
   }) async {
     final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
     final user = cred.user!;
-    await user.updateDisplayName(name);
-    await createProfileIfMissing(user, name: name, phone: phone);
-    await user.sendEmailVerification();
+
+    // The account now exists, so nothing below may make `register` throw: a
+    // failure here would show an error while the user is already signed in, and
+    // a retry would answer "email already in use". Each step is best-effort and
+    // has its own recovery path.
+    try {
+      await user.updateDisplayName(name);
+    } on FirebaseException {/* display name is also stored in the profile */}
+
+    // Profile: one retry, then the login path creates it (without the phone,
+    // which the user can add from Edit profile).
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await createProfileIfMissing(user, name: name, phone: phone);
+        break;
+      } on FirebaseException {/* retried once, then on next login */}
+    }
+
+    // Verification mail: the verify page offers "Resend".
+    try {
+      await user.sendEmailVerification();
+    } on FirebaseException {/* user can resend from the verify page */}
     return user;
   }
 
