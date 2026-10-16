@@ -17,6 +17,20 @@ class Env {
   static String get cloudinaryUploadPreset => _get('CLOUDINARY_UPLOAD_PRESET');
   static bool get cloudinaryConfigured => _isSet(cloudinaryCloudName) && _isSet(cloudinaryUploadPreset);
 
+  // ---- Map tiles (Module 06) --------------------------------------------------
+  /// Empty -> the public OpenStreetMap server (fine for dev / demos). For a real
+  /// launch point this at a commercial tile provider (MapTiler, Mapbox, Stadia...).
+  static String get mapTileUrl {
+    final v = _get('MAP_TILE_URL');
+    return v.isEmpty ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' : v;
+  }
+
+  /// Identifies the app to the tile server (OSM policy): use your applicationId.
+  static String get mapUserAgentPackage {
+    final v = _get('MAP_USER_AGENT_PACKAGE');
+    return _isSet(v) ? v : 'com.example.teamApp';
+  }
+
   // ---- Firebase (public client identifiers, see firebase_options.dart) ------
   static String get firebaseProjectId => _get('FIREBASE_PROJECT_ID');
   static String get firebaseMessagingSenderId => _get('FIREBASE_MESSAGING_SENDER_ID');

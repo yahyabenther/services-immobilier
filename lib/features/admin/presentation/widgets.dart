@@ -63,7 +63,7 @@ class StatusChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         decoration: BoxDecoration(
-          color: color.withOpacity(.12),
+          color: color.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
@@ -87,7 +87,7 @@ class StatCard extends StatelessWidget {
         border: Border.all(color: C.line),
       ),
       child: Row(children: [
-        CircleAvatar(radius: 20, backgroundColor: c.withOpacity(.12), child: Icon(icon, color: c, size: 20)),
+        CircleAvatar(radius: 20, backgroundColor: c.withValues(alpha: .12), child: Icon(icon, color: c, size: 20)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -109,7 +109,7 @@ class SectionTitle extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(0, 18, 0, 10),
         child: Row(children: [
           Expanded(child: Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: C.navy))),
-          if (trailing != null) trailing!,
+          ?trailing,
         ]),
       );
 }

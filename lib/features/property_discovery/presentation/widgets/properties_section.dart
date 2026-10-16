@@ -70,8 +70,8 @@ class _SkeletonList extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 3,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, __) => const PropertyCardSkeleton(),
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (_, _) => const PropertyCardSkeleton(),
         ),
       );
 }
@@ -87,7 +87,7 @@ class _CardList extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, i) {
             final p = items[i];
             return PropertyCard(

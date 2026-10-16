@@ -1,5 +1,4 @@
 import '../../../properties/domain/entities/property.dart';
-
 /// One page of results.
 class SearchResultPage {
   const SearchResultPage({

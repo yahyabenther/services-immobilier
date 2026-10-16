@@ -103,7 +103,7 @@ class PropertyReviewPage extends StatelessWidget {
           body: ListView(padding: const EdgeInsets.all(16), children: [
             Container(
               height: 140,
-              decoration: BoxDecoration(color: C.navy.withOpacity(.08), borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: C.navy.withValues(alpha: .08), borderRadius: BorderRadius.circular(14)),
               child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.photo_library_outlined, color: C.navy, size: 34),
                 const SizedBox(height: 6),

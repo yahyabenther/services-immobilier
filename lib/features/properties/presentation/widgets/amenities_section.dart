@@ -14,7 +14,7 @@ class AmenitiesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final amenities = <Amenity>{
       for (final id in amenityIds)
-        if (Amenity.tryParse(id) case final a?) a,
+        ?Amenity.tryParse(id),
     };
     if (amenities.isEmpty) return const SizedBox.shrink();
 

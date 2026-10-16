@@ -134,7 +134,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: ValueListenableBuilder<TextEditingValue>(
                       valueListenable: _query,
-                      builder: (_, v, __) => v.text.isEmpty
+                      builder: (_, v, _) => v.text.isEmpty
                           ? const SizedBox.shrink()
                           : IconButton(
                               tooltip: 'Clear search',

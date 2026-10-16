@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/app/router_guard.dart';
-import '../lib/app/routes.dart';
-import '../lib/features/auth/domain/entities/auth_user.dart';
-import '../lib/features/auth/providers/auth_state.dart';
+import 'package:team_app/app/router_guard.dart';
+import 'package:team_app/app/routes.dart';
+import 'package:team_app/features/auth/domain/entities/auth_user.dart';
+import 'package:team_app/features/auth/providers/auth_state.dart';
 
 AuthUser u({
   UserRole role = UserRole.user,

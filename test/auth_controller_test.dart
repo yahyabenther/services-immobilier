@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/core/errors/auth_failure.dart';
-import '../lib/features/auth/providers/auth_provider.dart';
-import '../lib/features/auth/providers/auth_state.dart';
+import 'package:team_app/core/errors/auth_failure.dart';
+import 'package:team_app/features/auth/providers/auth_provider.dart';
+import 'package:team_app/features/auth/providers/auth_state.dart';
 
 import 'fake_auth_repository.dart';
 

@@ -50,3 +50,4 @@ app.*.map.json
 .widget_preview/
 tools/serviceAccountKey.json
 tools/node_modules/
+.env

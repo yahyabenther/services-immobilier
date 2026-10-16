@@ -35,7 +35,7 @@ Future<ProviderContainer> pumpSearch(WidgetTester tester, FakeSearchRepository r
 
 void main() {
   testWidgets('shows the default feed with a count', (tester) async {
-    final repo = FakeSearchRepository((_, __) async => pageOf([
+    final repo = FakeSearchRepository((_, _) async => pageOf([
           makeProperty(id: 'a', title: 'Villa A'),
           makeProperty(id: 'b', title: 'Flat B'),
         ]));
@@ -68,7 +68,7 @@ void main() {
 
   testWidgets('error state keeps the filters and Retry recovers', (tester) async {
     var fail = true;
-    final repo = FakeSearchRepository((_, __) async {
+    final repo = FakeSearchRepository((_, _) async {
       if (fail) throw const DiscoveryFailure(DiscoveryFailureType.network);
       return pageOf([makeProperty(title: 'Back again')]);
     });
@@ -83,7 +83,7 @@ void main() {
   });
 
   testWidgets('filter sheet validates min/max price and blocks Apply', (tester) async {
-    final repo = FakeSearchRepository((_, __) async => pageOf([makeProperty()]));
+    final repo = FakeSearchRepository((_, _) async => pageOf([makeProperty()]));
     await pumpSearch(tester, repo);
 
     await tester.tap(find.byTooltip('Filters'));
@@ -113,7 +113,7 @@ void main() {
   });
 
   testWidgets('filters can be deselected and removed from the chips', (tester) async {
-    final repo = FakeSearchRepository((_, __) async => pageOf([makeProperty()]));
+    final repo = FakeSearchRepository((_, _) async => pageOf([makeProperty()]));
     final c = await pumpSearch(tester, repo);
 
     await c.read(searchResultsProvider.notifier).applyFilter(
@@ -129,7 +129,7 @@ void main() {
   });
 
   testWidgets('sort sheet changes the sort', (tester) async {
-    final repo = FakeSearchRepository((_, __) async => pageOf([makeProperty()]));
+    final repo = FakeSearchRepository((_, _) async => pageOf([makeProperty()]));
     await pumpSearch(tester, repo);
 
     await tester.tap(find.text('Recommended'));
@@ -140,7 +140,7 @@ void main() {
   });
 
   testWidgets('map toggle shows the map placeholder and goes back to the same list', (tester) async {
-    final repo = FakeSearchRepository((_, __) async => pageOf([makeProperty(title: 'Villa A')]));
+    final repo = FakeSearchRepository((_, _) async => pageOf([makeProperty(title: 'Villa A')]));
     await pumpSearch(tester, repo);
     final callsBefore = repo.calls.length;
 

@@ -11,6 +11,7 @@ import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/providers/auth_provider.dart';
+import '../features/map/presentation/pages/map_page.dart'; // Module 06
 import '../features/profile/presentation/profile_page.dart'; // Module 02
 import '../features/properties/presentation/pages/property_details_page.dart'; // Module 05
 import '../features/property_discovery/presentation/screens/home_discovery_screen.dart';
@@ -62,8 +63,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: Routes.map,
-              builder: (_, state) =>
-                  ComingSoonPage(title: 'Map', module: 'Module 06', params: state.uri.queryParameters),
+              builder: (_, state) => MapPage(params: state.uri.queryParameters), // Module 06
             ),
           ]),
           StatefulShellBranch(routes: [

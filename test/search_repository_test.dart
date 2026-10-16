@@ -34,8 +34,8 @@ RawPropertyDoc rawDoc(
         'status': status,
         'verificationStatus': verification,
         'publishedAt': Timestamp.fromDate(DateTime(2026, 10, 10).subtract(Duration(days: days))),
-        if (lat != null) 'latitude': lat,
-        if (lng != null) 'longitude': lng,
+        'latitude': ?lat,
+        'longitude': ?lng,
       },
     );
 

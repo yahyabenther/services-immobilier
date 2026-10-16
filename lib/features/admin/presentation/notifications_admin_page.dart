@@ -58,7 +58,7 @@ class _NotificationsAdminPageState extends State<NotificationsAdminPage> {
             Row(children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: target,
+                  initialValue: target,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Cible'),
                   items: [for (final t in targets) DropdownMenuItem(value: t, child: Text(t, overflow: TextOverflow.ellipsis))],
@@ -68,7 +68,7 @@ class _NotificationsAdminPageState extends State<NotificationsAdminPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: type,
+                  initialValue: type,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: [for (final t in types) DropdownMenuItem(value: t, child: Text(t))],

@@ -18,8 +18,8 @@ RawProperty raw(String id, {String status = 'published', double? lat, double? ln
         'verificationStatus': verification,
         'views': views,
         'publishedAt': Timestamp.fromDate(DateTime(2026, 10, 9)),
-        if (lat != null) 'latitude': lat,
-        if (lng != null) 'longitude': lng,
+        'latitude': ?lat,
+        'longitude': ?lng,
       },
     );
 

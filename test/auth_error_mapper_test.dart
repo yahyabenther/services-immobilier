@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/core/errors/auth_failure.dart';
-import '../lib/features/auth/data/auth_error_mapper.dart';
+import 'package:team_app/core/errors/auth_failure.dart';
+import 'package:team_app/features/auth/data/auth_error_mapper.dart';
 
 void main() {
   AuthFailureType map(String code) =>

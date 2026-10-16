@@ -44,7 +44,7 @@ class PropertyDetailsPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Property details')),
       body: load.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => _StateMessage(
+        error: (_, _) => _StateMessage(
           message: const PropertyFailure(PropertyFailureType.unknown).message,
           onRetry: () => ref.invalidate(propertyDetailsProvider(propertyId)),
         ),

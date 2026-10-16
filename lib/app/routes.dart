@@ -44,6 +44,11 @@ class Routes {
   /// Module 06 entry with usable location context when we have it.
   static String mapWith({DiscoveryLocation? location}) => _build(map, _locationParams(location));
 
+  /// Module 04 -> 06: open the full map with the filter currently applied in Search.
+  /// `t` makes every call a new location so the map re-reads the Search filter.
+  static String mapFromSearch() =>
+      _build(map, {'source': 'search', 't': '${DateTime.now().millisecondsSinceEpoch}'});
+
   static Map<String, String> _locationParams(DiscoveryLocation? l) => {
         if (l?.governorate != null) 'governorate': l!.governorate!,
         if (l != null && l.hasCoordinates) ...{'lat': '${l.latitude}', 'lng': '${l.longitude}'},

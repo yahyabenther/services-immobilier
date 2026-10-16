@@ -54,7 +54,7 @@ class _AdminShellState extends State<AdminShell> {
     final wide = MediaQuery.of(context).size.width >= 900;
     final body = ListenableBuilder(
       listenable: svc,
-      builder: (_, __) => sections[index].page,
+      builder: (_, _) => sections[index].page,
     );
 
     if (wide) {
