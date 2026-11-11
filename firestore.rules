@@ -37,6 +37,28 @@ service cloud.firestore {
         || (signedIn() && resource.data.ownerId == request.auth.uid)
         || isAdmin();
 
+      // ---- Module 09: My Listings (owner actions) -----------------------------
+      // Same transitions as lib/features/listings/domain/listing_actions.dart.
+      function isOwner() {
+        return signedIn() && resource.data.ownerId == request.auth.uid;
+      }
+      function ownerTransition(from, to) {
+        return (from == 'draft' && to == 'pending_review')
+          || (from == 'published' && to == 'removed')
+          || (from in ['rejected', 'removed'] && to == 'draft');
+      }
+
+      // Owner may ONLY change status (+ updatedAt), through an allowed transition.
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && ownerTransition(resource.data.status, request.resource.data.status);
+
+      // Owner may delete only listings that are not live or under review.
+      allow delete: if isOwner()
+        && resource.data.status in ['draft', 'rejected', 'removed'];
+
+      // Admin keeps full control (moderation).
       allow create, update, delete: if isAdmin();
     }
   }
