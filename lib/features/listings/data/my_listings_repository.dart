@@ -1,24 +1,33 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../properties/data/property_mapper.dart';
 import '../../properties/domain/entities/property.dart';
 
-/// Status changes an OWNER may make (spec §20). Approve / reject / suspend
-/// belong to the admin. Firestore rules enforce the same list.
-Set<PropertyStatus> ownerTransitions(PropertyStatus s) => switch (s) {
-      PropertyStatus.draft => {PropertyStatus.pendingReview}, // Submit
-      PropertyStatus.published => {PropertyStatus.removed}, // Withdraw
-      PropertyStatus.rejected || PropertyStatus.removed => {PropertyStatus.draft}, // Back to draft
-      _ => const {},
-    };
+/// Owner-side access to the `properties` collection (Module 09).
+class MyListingsRepository {
+  MyListingsRepository(this._db);
+  final FirebaseFirestore _db;
 
-/// A listing can be deleted only when it is not live or under review.
-bool ownerCanDelete(PropertyStatus s) =>
-    s == PropertyStatus.draft || s == PropertyStatus.rejected || s == PropertyStatus.removed;
+  CollectionReference<Map<String, dynamic>> get _col => _db.collection('properties');
 
-/// Tabs of the My Listings page, in display order.
-const myListingsTabs = [
-  PropertyStatus.draft,
-  PropertyStatus.pendingReview,
-  PropertyStatus.published,
-  PropertyStatus.rejected,
-  PropertyStatus.suspended,
-  PropertyStatus.expired,
-];
+  /// Every listing of [ownerId], any status, newest first.
+  /// No orderBy -> no composite index needed; sorted on the client.
+  Stream<List<Property>> watchMine(String ownerId) {
+    return _col.where('ownerId', isEqualTo: ownerId).snapshots().map((snap) {
+      final list = snap.docs
+          .map((d) => PropertyMapper.tryFromMap(d.id, d.data()))
+          .whereType<Property>()
+          .toList();
+      DateTime key(Property p) => p.updatedAt ?? p.createdAt ?? DateTime(2000);
+      list.sort((a, b) => key(b).compareTo(key(a)));
+      return list;
+    });
+  }
+
+  Future<void> setStatus(String id, PropertyStatus status) => _col.doc(id).update({
+        'status': status.wire,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+  Future<void> delete(String id) => _col.doc(id).delete();
+}

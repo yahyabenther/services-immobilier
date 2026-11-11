@@ -20,5 +20,6 @@ const myListingsTabs = [
   PropertyStatus.published,
   PropertyStatus.rejected,
   PropertyStatus.suspended,
+  PropertyStatus.removed,
   PropertyStatus.expired,
 ];
