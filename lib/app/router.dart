@@ -10,7 +10,17 @@ import '../features/auth/presentation/pages/reset_password_page.dart';
 import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
+import '../features/agents/presentation/pages/agent_dashboard_page.dart'; // Module 10
+import '../features/agents/presentation/pages/agent_inquiries_page.dart';
+import '../features/agents/presentation/pages/agent_listing_detail_page.dart';
+import '../features/agents/presentation/pages/agent_listings_page.dart';
+import '../features/agents/presentation/pages/agent_profile_page.dart';
+import '../features/agents/presentation/pages/agent_statistics_page.dart';
+import '../features/agents/presentation/pages/agent_verification_page.dart';
+import '../features/agents/presentation/pages/edit_agent_profile_page.dart';
+import '../features/agents/presentation/pages/public_agent_profile_page.dart';
 import '../features/auth/providers/auth_provider.dart';
+import '../features/messaging/presentation/pages/chat_page.dart';
 import '../features/map/presentation/pages/map_page.dart'; // Module 06
 import '../features/profile/presentation/profile_page.dart'; // Module 02
 import '../features/properties/presentation/pages/property_details_page.dart'; // Module 05
@@ -83,6 +93,40 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.propertyDetailsPattern,
         builder: (_, state) => PropertyDetailsPage(propertyId: state.pathParameters['id'] ?? ''),
+      ),
+      // ---- Module 10: Agent / Agency ---------------------------------------
+      GoRoute(
+        path: Routes.agentDashboard,
+        builder: (_, __) => const AgentDashboardPage(),
+        routes: [
+          GoRoute(path: 'setup', builder: (_, __) => const EditAgentProfilePage(setup: true)),
+          GoRoute(
+            path: 'profile',
+            builder: (_, __) => const AgentProfilePage(),
+            routes: [GoRoute(path: 'edit', builder: (_, __) => const EditAgentProfilePage(setup: false))],
+          ),
+          GoRoute(
+            path: 'listings',
+            builder: (_, __) => const AgentListingsPage(),
+            routes: [
+              GoRoute(
+                path: ':propertyId',
+                builder: (_, state) => AgentListingDetailPage(propertyId: state.pathParameters['propertyId'] ?? ''),
+              ),
+            ],
+          ),
+          GoRoute(path: 'inquiries', builder: (_, __) => const AgentInquiriesPage()),
+          GoRoute(path: 'statistics', builder: (_, __) => const AgentStatisticsPage()),
+          GoRoute(path: 'verification', builder: (_, __) => const AgentVerificationPage()),
+        ],
+      ),
+      GoRoute(
+        path: Routes.agentPublicPattern,
+        builder: (_, state) => PublicAgentProfilePage(agentId: state.pathParameters['agentId'] ?? ''),
+      ),
+      GoRoute(
+        path: Routes.chatPattern,
+        builder: (_, state) => ChatPage(conversationId: state.pathParameters['conversationId'] ?? ''),
       ),
       GoRoute(
         path: Routes.publish,

@@ -33,8 +33,29 @@ class CloudinaryService {
     required String filename,
     String? folder,
     String? publicId,
+  }) =>
+      _upload(bytes, filename: filename, folder: folder, publicId: publicId);
+
+  /// Sensitive documents (agent verification). Uses a SEPARATE unsigned preset
+  /// (`CLOUDINARY_VERIFICATION_PRESET`) whose Delivery type is `Authenticated`,
+  /// so the file has no public URL. Returns the `public_id` (not a URL): only the
+  /// backend can mint a signed, expiring link for an administrator.
+  Future<String> uploadPrivateDocument(
+    Uint8List bytes, {
+    required String filename,
+    required String folder,
+  }) =>
+      _upload(bytes, filename: filename, folder: folder, preset: Env.cloudinaryVerificationPreset, returnPublicId: true);
+
+  Future<String> _upload(
+    Uint8List bytes, {
+    required String filename,
+    String? folder,
+    String? publicId,
+    String? preset,
+    bool returnPublicId = false,
   }) async {
-    if (!Env.cloudinaryConfigured) {
+    if (!Env.cloudinaryConfigured || (preset != null && !Env.cloudinaryVerificationConfigured)) {
       throw const CloudinaryUploadException('Cloudinary is not configured yet.');
     }
     if (bytes.isEmpty) {
@@ -46,7 +67,7 @@ class CloudinaryService {
 
     final uri = Uri.parse('https://api.cloudinary.com/v1_1/${Env.cloudinaryCloudName}/image/upload');
     final request = http.MultipartRequest('POST', uri)
-      ..fields['upload_preset'] = Env.cloudinaryUploadPreset
+      ..fields['upload_preset'] = preset ?? Env.cloudinaryUploadPreset
       ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
     if (folder != null) request.fields['folder'] = folder;
     // Unsigned presets may set public_id only if the preset allows it; if you want
@@ -58,8 +79,9 @@ class CloudinaryService {
       final response = await http.Response.fromStream(streamed);
       final body = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && body is Map && body['secure_url'] is String) {
-        return body['secure_url'] as String;
+      if (response.statusCode == 200 && body is Map) {
+        final key = returnPublicId ? 'public_id' : 'secure_url';
+        if (body[key] is String) return body[key] as String;
       }
       final apiMessage = body is Map && body['error'] is Map ? (body['error']['message'] ?? '') : '';
       throw CloudinaryUploadException(

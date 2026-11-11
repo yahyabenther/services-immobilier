@@ -17,6 +17,11 @@ class Env {
   static String get cloudinaryUploadPreset => _get('CLOUDINARY_UPLOAD_PRESET');
   static bool get cloudinaryConfigured => _isSet(cloudinaryCloudName) && _isSet(cloudinaryUploadPreset);
 
+  /// Module 10: separate unsigned preset, Delivery type = Authenticated (private).
+  static String get cloudinaryVerificationPreset => _get('CLOUDINARY_VERIFICATION_PRESET');
+  static bool get cloudinaryVerificationConfigured =>
+      _isSet(cloudinaryCloudName) && _isSet(cloudinaryVerificationPreset);
+
   // ---- Map tiles (Module 06) --------------------------------------------------
   /// Empty -> the public OpenStreetMap server (fine for dev / demos). For a real
   /// launch point this at a commercial tile provider (MapTiler, Mapbox, Stadia...).

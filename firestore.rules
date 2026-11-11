@@ -8,8 +8,13 @@ service cloud.firestore {
       return signedIn() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+    function unchanged(keys) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(keys);
+    }
 
     // ---- Module 01: users ---------------------------------------------------
+    // `role` is never client-writable: the agent role is granted by the
+    // onAgentProfileCreated Cloud Function (Module 10).
     match /users/{uid} {
       allow read: if isSelf(uid) || isAdmin();
 
@@ -22,7 +27,6 @@ service cloud.firestore {
         && request.resource.data.verified == false
         && request.resource.data.email == request.auth.token.email;
 
-      // Module 02: notificationPreferences added (Notifications page saves it).
       allow update: if (isSelf(uid)
           && request.resource.data.diff(resource.data).affectedKeys()
                .hasOnly(['name', 'phone', 'photoUrl', 'preferredCity', 'notificationPreferences']))
@@ -31,13 +35,156 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---- Module 03: public discovery of properties ---------------------------
+    // ---- Module 03 + 10: properties -------------------------------------------
     match /properties/{propertyId} {
+      // Module 10: the responsible agent also reads their own non-public listings.
       allow read: if resource.data.status == 'published'
-        || (signedIn() && resource.data.ownerId == request.auth.uid)
+        || (signedIn() && (resource.data.ownerId == request.auth.uid
+                           || resource.data.agentId == request.auth.uid))
         || isAdmin();
 
-      allow create, update, delete: if isAdmin();
+      // Module 08 will add owner/agent create + edit rules here.
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        // Module 10: agent lifecycle moves ONLY. Never published / rejected /
+        // suspended / expired, never agentId, ownerId, counters.
+        || (signedIn() && resource.data.agentId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+            && (
+              (resource.data.status in ['draft', 'rejected']
+                 && request.resource.data.status == 'pending_review')
+              || (resource.data.status in ['draft', 'pending_review', 'published', 'rejected', 'expired']
+                 && request.resource.data.status == 'removed')
+            ));
+    }
+
+    // ---- Module 07: favorites (document id = {userId}_{propertyId}) ----------
+    match /favorites/{favoriteId} {
+      allow get: if signedIn()
+        && (resource == null || resource.data.userId == request.auth.uid);
+
+      allow list: if signedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll(['userId', 'propertyId', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['userId', 'propertyId', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.propertyId is string
+        && favoriteId == request.auth.uid + '_' + request.resource.data.propertyId
+        && request.resource.data.createdAt == request.time
+        && get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.status == 'published';
+
+      allow update: if false;
+
+      allow delete: if signedIn()
+        && (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    // ---- Module 10: public professional profile -------------------------------
+    function validProfile(d) {
+      return d.professionalName is string && d.professionalName.trim().size() >= 3 && d.professionalName.size() <= 80
+        && d.description is string && d.description.size() >= 20 && d.description.size() <= 600
+        && d.phone is string && d.phone.matches('^\\+216[2-579][0-9]{7}$')
+        && d.publicEmail is string && d.publicEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]{2,}$')
+        && d.city is string && d.city.size() > 0
+        && d.profileType in ['agent', 'agency']
+        && (d.profileType != 'agency' || (d.agencyName is string && d.agencyName.size() > 0))
+        && (d.website == null || (d.website is string && d.website.matches('^https?://.+')))
+        && d.serviceAreas.size() <= 10 && d.languages.size() <= 6;
+    }
+
+    match /agent_profiles/{agentId} {
+      allow read: if resource.data.isPublic == true || isSelf(agentId) || isAdmin();
+
+      allow create: if isSelf(agentId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.verificationStatus == 'not_submitted'   // cannot self-verify
+        && request.resource.data.agencyId == null
+        && validProfile(request.resource.data)
+        && request.resource.data.keys().hasOnly(['userId', 'professionalName', 'description', 'phone',
+             'publicEmail', 'city', 'profileType', 'agencyName', 'agencyId', 'profileImageUrl', 'address',
+             'website', 'yearsOfExperience', 'languages', 'serviceAreas', 'verificationStatus',
+             'showPhone', 'showEmail', 'isPublic', 'createdAt', 'updatedAt']);
+
+      allow update: if isSelf(agentId)
+        && unchanged(['userId', 'agencyId', 'verificationStatus', 'createdAt'])
+        && validProfile(request.resource.data);
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- Module 10: trusted counters (written by Cloud Functions only) ---------
+    match /property_stats/{propertyId} {
+      allow read: if signedIn() && (resource.data.agentId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // ---- Module 10: analytics events (create-only, own uid) --------------------
+    match /property_events/{eventId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['type', 'propertyId', 'userId', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type == 'property_view'
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
+    // ---- Module 10: verification (pending-only create; decision = backend) -----
+    match /verifications/{id} {
+      allow read: if signedIn() && (resource.data.targetId == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && request.resource.data.targetId == request.auth.uid
+        && request.resource.data.targetType == 'agent'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reviewedBy == null
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.rejectionReason == null
+        && request.resource.data.documentUrls is list
+        && request.resource.data.documentUrls.size() > 0
+        && request.resource.data.documentUrls.size() <= 12
+        && request.resource.data.submittedAt == request.time;
+      allow update, delete: if false;
+      match /private/{doc} { allow read, write: if isAdmin(); }
+    }
+
+    // ---- Module 10 / 09 base: conversations (participants only) ----------------
+    match /conversations/{cid} {
+      allow read: if signedIn() && request.auth.uid in resource.data.participants;
+
+      allow create: if signedIn()
+        && cid == request.resource.data.propertyId + '_' + request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.recipientId != request.auth.uid
+        && request.resource.data.participants == [request.auth.uid, request.resource.data.recipientId]
+        && get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.status == 'published'
+        && request.resource.data.recipientId ==
+           (get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.agentId != null
+             ? get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.agentId
+             : get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.ownerId);
+
+      allow update: if signedIn() && request.auth.uid in resource.data.participants
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['lastMessage', 'lastMessageAt', 'lastSenderId', 'lastReadAt']);
+
+      match /messages/{mid} {
+        allow read: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(cid)).data.participants;
+        allow create: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(cid)).data.participants
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // ---- Module 10: notifications (functions write; owner reads / marks read) --
+    match /notifications/{nid} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create, delete: if false;
     }
   }
 }

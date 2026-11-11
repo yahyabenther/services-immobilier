@@ -6,6 +6,10 @@ import '../../../../app/routes.dart';
 import '../../../../core/errors/property_failure.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/price_formatter.dart';
+import '../../../agents/data/property_event_recorder.dart';
+import '../../../agents/presentation/providers/agent_providers.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../messaging/data/conversation_repository.dart';
 import '../../../property_discovery/domain/entities/discovery_location.dart';
 import '../../domain/entities/property.dart';
 import '../../providers/property_providers.dart';
@@ -23,7 +27,7 @@ import '../widgets/verification_badge.dart';
 class PropertyActionsConfig {
   const PropertyActionsConfig._();
 
-  static const messagingEnabled = false; // Module 09
+  static const messagingEnabled = true; // Module 09 base, delivered with Module 10
   static const favoritesEnabled = false; // Module 07
   static const reportsEnabled = false; // Module 13
 }
@@ -62,7 +66,7 @@ class PropertyDetailsPage extends ConsumerWidget {
           return _Content(property: p);
         },
       ),
-      bottomNavigationBar: property == null ? null : const _ActionBar(),
+      bottomNavigationBar: property == null ? null : _ActionBar(property: property),
     );
   }
 }
@@ -81,6 +85,7 @@ class _Content extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
+            _ViewTracker(property: p),
             PhotoGallery(images: p.images),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -107,7 +112,13 @@ class _Content extends StatelessWidget {
                 KeyFactsRow(property: p),
                 if (p.ownerName != null) ...[
                   const _SectionTitle('Listed by'),
-                  OwnerCard(name: p.ownerName!, role: p.ownerRole),
+                  OwnerCard(
+                    name: p.ownerName!,
+                    role: p.ownerRole,
+                    onTap: (p.agentId != null && (p.ownerRole == 'agent' || p.ownerRole == 'agency'))
+                        ? () => context.push(Routes.agentPublic(p.agentId!))
+                        : null,
+                  ),
                 ],
                 const _SectionTitle('Description'),
                 ExpandableDescription(text: p.description),
@@ -173,12 +184,43 @@ class _LocationCard extends StatelessWidget {
   }
 }
 
-class _ActionBar extends StatelessWidget {
-  const _ActionBar();
+class _ActionBar extends ConsumerStatefulWidget {
+  const _ActionBar({required this.property});
+
+  final Property property;
+
+  @override
+  ConsumerState<_ActionBar> createState() => _ActionBarState();
+}
+
+class _ActionBarState extends ConsumerState<_ActionBar> {
+  bool _busy = false;
+
+  /// Module 10 / 09: open (or reuse) the conversation tied to this property.
+  Future<void> _contact() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    try {
+      final user = ref.read(currentUserProvider);
+      final convo = await ref.read(openAgentConversationProvider)(widget.property, userName: user?.name);
+      router.push(Routes.chat(convo.id));
+    } on ConversationFailure catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Something went wrong. Please try again.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Nothing to show once every integration is ready and wired elsewhere.
+    final me = ref.watch(currentUserProvider)?.id;
+    final recipient = ConversationRepository.recipientOf(widget.property);
+    final isOwn = me != null && me == recipient;
+    final enabled = PropertyActionsConfig.messagingEnabled && !isOwn && !_busy;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
@@ -187,22 +229,45 @@ class _ActionBar extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              // TODO(Module 09): open / create the conversation for this property.
-              onPressed: PropertyActionsConfig.messagingEnabled ? () {} : null,
-              icon: const Icon(Icons.chat_bubble_outline_rounded),
-              label: const Text('Contact the advertiser'),
+              onPressed: enabled ? _contact : null,
+              icon: _busy
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.chat_bubble_outline_rounded),
+              label: Text(widget.property.ownerRole == 'owner' || widget.property.ownerRole == null
+                  ? 'Contact the advertiser'
+                  : 'Contact the agent'),
             ),
           ),
-          if (!PropertyActionsConfig.messagingEnabled)
+          if (isOwn)
             const Padding(
               padding: EdgeInsets.only(top: 6),
-              child: Text('Messaging is not available yet.',
-                  style: TextStyle(fontSize: 12, color: AppColors.muted)),
+              child: Text('This is your own listing.', style: TextStyle(fontSize: 12, color: AppColors.muted)),
             ),
         ]),
       ),
     );
   }
+}
+
+/// Records one `property_view` event per opening (spec §14.4). Renders nothing.
+class _ViewTracker extends ConsumerStatefulWidget {
+  const _ViewTracker({required this.property});
+
+  final Property property;
+
+  @override
+  ConsumerState<_ViewTracker> createState() => _ViewTrackerState();
+}
+
+class _ViewTrackerState extends ConsumerState<_ViewTracker> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(propertyEventRecorderProvider).recordView(widget.property);
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 class _Tag extends StatelessWidget {

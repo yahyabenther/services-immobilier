@@ -7,9 +7,12 @@ import '../../domain/entities/property.dart';
 /// (not submitted, pending, rejected, expired) renders nothing.
 /// Icon + text, never colour alone.
 class VerificationBadge extends StatelessWidget {
-  const VerificationBadge({super.key, required this.status});
+  const VerificationBadge({super.key, required this.status, this.label = 'Verified listing'});
 
   final VerificationStatus status;
+
+  /// `Verified listing` (default) or e.g. `Verified professional` on agent profiles.
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +20,11 @@ class VerificationBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(color: const Color(0xFFE6F6EE), borderRadius: BorderRadius.circular(20)),
-      child: const Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.verified_rounded, size: 15, color: AppColors.success),
-        SizedBox(width: 5),
-        Text('Verified listing',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.verified_rounded, size: 15, color: AppColors.success),
+        const SizedBox(width: 5),
+        Text(label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success)),
       ]),
     );
   }

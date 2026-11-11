@@ -23,11 +23,36 @@ class Routes {
   static const publish = '/publish'; // Module 08
   static const adminDashboard = '/admin/dashboard';
 
+  // ---- Module 10: Agent / Agency (all require a signed-in user) -------------
+  static const agentDashboard = '/agent';
+  static const agentSetup = '/agent/setup';
+  static const agentProfile = '/agent/profile';
+  static const agentProfileEdit = '/agent/profile/edit';
+  static const agentListings = '/agent/listings';
+  static const agentInquiries = '/agent/inquiries';
+  static const agentStatistics = '/agent/statistics';
+  static const agentVerification = '/agent/verification';
+  static const agentListingPattern = '/agent/listings/:propertyId';
+
+  /// Public professional profile. Exposes public fields only.
+  static const agentPublicPattern = '/agents/:agentId';
+
+  /// Shared messaging base (Module 09 extends it).
+  static const chatPattern = '/chat/:conversationId';
+
   /// go_router pattern for Module 05. Build real links with [propertyDetails].
   static const propertyDetailsPattern = '/property/:id';
 
   /// Reachable while signed out.
   static const publicRoutes = {welcome, login, register, forgotPassword};
+
+  static String agentListing(String propertyId) => '/agent/listings/${Uri.encodeComponent(propertyId)}';
+  static String agentPublic(String agentId) => '/agents/${Uri.encodeComponent(agentId)}';
+  static String chat(String conversationId) => '/chat/${Uri.encodeComponent(conversationId)}';
+
+  /// Module 08 entry: publish a new property, or edit one (`edit=<propertyId>`).
+  static String publishWith({String? editPropertyId}) =>
+      _build(publish, {if (editPropertyId != null) 'edit': editPropertyId});
 
   /// Module 05 — stable id in the route, never the whole object.
   static String propertyDetails(String id) => '/property/${Uri.encodeComponent(id)}';

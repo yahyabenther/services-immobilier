@@ -80,6 +80,7 @@ class Property {
     required this.status,
     required this.verificationStatus,
     this.agentId,
+    this.agencyId,
     this.ownerName,
     this.ownerRole,
     this.description = '',
@@ -104,6 +105,10 @@ class Property {
   final String id;
   final String ownerId;
   final String? agentId;
+
+  /// Optional. Set only when the listing is managed under an agency (Module 10).
+  /// Never overwrites [ownerId]: owner and professional stay distinct.
+  final String? agencyId;
 
   /// PUBLIC display fields copied onto the listing by the publisher (Module 08).
   /// Never read from the private `users/{uid}` document.

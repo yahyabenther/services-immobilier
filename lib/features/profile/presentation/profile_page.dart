@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../app/routes.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../data/profile_repository.dart';
 import 'edit_profile_page.dart';
@@ -365,6 +368,15 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
                     title: 'Log Out',
                     subtitle: 'Sign out of your account',
                     onTap: _loggingOut ? null : _logout,
+                  ),
+
+                  _sectionTitle('Professional'),
+
+                  _profileItem(
+                    icon: Icons.badge_outlined,
+                    title: 'Agent / Agency space',
+                    subtitle: 'Profile, listings, inquiries and statistics',
+                    onTap: () => context.push(Routes.agentDashboard),
                   ),
 
                   _sectionTitle('Activity'),

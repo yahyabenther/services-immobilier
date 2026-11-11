@@ -5,10 +5,13 @@ import '../../../../core/theme/app_colors.dart';
 /// Public advertiser summary: display name + role label ONLY. No phone, no
 /// email, nothing read from the private user profile (spec §8.9).
 class OwnerCard extends StatelessWidget {
-  const OwnerCard({super.key, required this.name, this.role});
+  const OwnerCard({super.key, required this.name, this.role, this.onTap});
 
   final String name;
   final String? role;
+
+  /// Opens the public professional profile (agents / agencies only).
+  final VoidCallback? onTap;
 
   String get _roleLabel => switch (role) {
         'agent' => 'Real-estate agent',
@@ -19,7 +22,7 @@ class OwnerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initial = name.trim().isEmpty ? '?' : String.fromCharCode(name.trim().runes.first).toUpperCase();
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -43,7 +46,14 @@ class OwnerCard extends StatelessWidget {
             Text(_roleLabel, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
           ]),
         ),
+        if (onTap != null) const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
       ]),
+    );
+    if (onTap == null) return card;
+    return Semantics(
+      button: true,
+      label: 'View profile of $name',
+      child: InkWell(borderRadius: BorderRadius.circular(14), onTap: onTap, child: card),
     );
   }
 }
