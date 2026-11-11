@@ -7,6 +7,7 @@ import '../../../../core/errors/property_failure.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/price_formatter.dart';
 import '../../../property_discovery/domain/entities/discovery_location.dart';
+import '../../../favorites/presentation/widgets/favorite_button.dart';
 import '../../domain/entities/property.dart';
 import '../../providers/property_providers.dart';
 import '../widgets/amenities_section.dart';
@@ -24,7 +25,7 @@ class PropertyActionsConfig {
   const PropertyActionsConfig._();
 
   static const messagingEnabled = false; // Module 09
-  static const favoritesEnabled = false; // Module 07
+  static const favoritesEnabled = true; // Module 07
   static const reportsEnabled = false; // Module 13
 }
 
@@ -41,7 +42,11 @@ class PropertyDetailsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Property details')),
+      appBar: AppBar(
+        title: const Text('Property details'),
+        // Heart only once the property is loaded (nothing to favorite otherwise).
+        actions: [if (property != null) FavoriteButton(propertyId: propertyId)],
+      ),
       body: load.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _StateMessage(
