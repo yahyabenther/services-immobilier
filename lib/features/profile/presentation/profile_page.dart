@@ -9,6 +9,9 @@ import 'edit_profile_page.dart';
 import 'security_page.dart';
 import 'notifications_page.dart';
 import 'profile_avatar.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/routes.dart';
+import '../../property_discovery/domain/publish_permission.dart';
 
 class UserProfilePage extends ConsumerStatefulWidget {
   const UserProfilePage({super.key});
@@ -368,6 +371,14 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
                   ),
 
                   _sectionTitle('Activity'),
+
+                  if (canPublishProperty(authUser))
+                    _profileItem(
+                      icon: Icons.home_work_outlined,
+                      title: 'My Listings',
+                      subtitle: 'Drafts, pending, published...',
+                      onTap: () => context.push(Routes.myListings),
+                    ),
 
                   // Destinations that do not exist yet are shown as unavailable
                   // instead of routing to a blank screen or pretending to work.

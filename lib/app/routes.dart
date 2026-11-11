@@ -21,6 +21,7 @@ class Routes {
   static const profile = '/profile'; // Module 02
 
   static const publish = '/publish'; // Module 08
+  static const myListings = '/my-listings'; // Module 09
   static const adminDashboard = '/admin/dashboard';
 
   /// go_router pattern for Module 05. Build real links with [propertyDetails].

@@ -17,6 +17,7 @@ import '../features/profile/presentation/profile_page.dart'; // Module 02
 import '../features/properties/presentation/pages/property_details_page.dart'; // Module 05
 import '../features/property_discovery/presentation/screens/home_discovery_screen.dart';
 import '../features/search/presentation/pages/search_page.dart'; // Module 04
+import '../features/listings/presentation/pages/my_listings_page.dart'; // Module 09
 import 'app_shell.dart';
 import 'placeholder_pages.dart';
 import 'router_guard.dart';
@@ -87,6 +88,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.publish,
         builder: (_, __) => const ComingSoonPage(title: 'Publish property', module: 'Module 08'),
+      ),
+      GoRoute(
+        path: Routes.myListings,
+        builder: (_, _) => const MyListingsPage(),
       ),
     ],
   );
