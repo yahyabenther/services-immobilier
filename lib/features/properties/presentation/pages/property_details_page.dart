@@ -11,6 +11,7 @@ import '../../../agents/presentation/providers/agent_providers.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../messaging/data/conversation_repository.dart';
 import '../../../property_discovery/domain/entities/discovery_location.dart';
+import '../../../favorites/presentation/widgets/favorite_button.dart';
 import '../../domain/entities/property.dart';
 import '../../providers/property_providers.dart';
 import '../widgets/amenities_section.dart';
@@ -45,7 +46,11 @@ class PropertyDetailsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Property details')),
+      appBar: AppBar(
+        title: const Text('Property details'),
+        // Heart only once the property is loaded (nothing to favorite otherwise).
+        actions: [if (property != null) FavoriteButton(propertyId: propertyId)],
+      ),
       body: load.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _StateMessage(

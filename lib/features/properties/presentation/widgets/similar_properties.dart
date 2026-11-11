@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/routes.dart';
 import '../../../../core/widgets/app_section_header.dart';
-import '../../../property_discovery/presentation/widgets/property_card.dart';
+import '../../../favorites/presentation/widgets/favorite_property_card.dart';
 import '../../providers/property_providers.dart';
 
 /// Optional section: while loading, on error and when empty it renders nothing,
@@ -32,12 +32,11 @@ class SimilarProperties extends ConsumerWidget {
           separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, i) {
             final p = items[i];
-            return PropertyCard(
+            return FavoritePropertyCard(
               key: ValueKey(p.id),
               property: p,
               width: 240,
               onTap: () => context.push(Routes.propertyDetails(p.id)),
-              // No favorite control until the Favorites module exists.
             );
           },
         ),

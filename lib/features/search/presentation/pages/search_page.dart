@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show mapEquals;
 
 import '../../../../app/routes.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../property_discovery/presentation/widgets/property_card.dart';
+import '../../../favorites/presentation/widgets/favorite_property_card.dart';
 import '../../providers/search_providers.dart';
 import '../../providers/search_state.dart';
 import '../widgets/active_filter_chips.dart';
@@ -236,13 +236,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   final p = s.items[i];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: PropertyCard(
+                    child: FavoritePropertyCard(
                       key: ValueKey(p.id),
                       property: p,
                       width: double.infinity,
                       distanceKm: s.distancesKm[p.id],
                       onTap: () => context.push(Routes.propertyDetails(p.id)),
-                      // Favorite control stays hidden until Module 07 provides a real toggle.
                     ),
                   );
                 },

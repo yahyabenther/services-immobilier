@@ -7,7 +7,7 @@ import '../../../../core/widgets/app_section_header.dart';
 import '../../../properties/domain/entities/property.dart';
 import '../providers/property_discovery_providers.dart';
 import 'discovery_states.dart';
-import 'property_card.dart';
+import '../../../favorites/presentation/widgets/favorite_property_card.dart';
 import 'property_card_skeleton.dart';
 
 /// Header + horizontal list with its own loading / empty / error / retry states.
@@ -90,11 +90,10 @@ class _CardList extends StatelessWidget {
           separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, i) {
             final p = items[i];
-            return PropertyCard(
+            return FavoritePropertyCard(
               key: ValueKey(p.id), // stable ids as keys
               property: p,
               onTap: () => context.push(Routes.propertyDetails(p.id)),
-              // Favorite control stays hidden until Module 07 provides a real toggle.
             );
           },
         ),

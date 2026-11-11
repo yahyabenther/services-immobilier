@@ -27,6 +27,7 @@ import '../features/properties/presentation/pages/property_details_page.dart'; /
 import '../features/property_discovery/presentation/screens/home_discovery_screen.dart';
 import '../features/search/presentation/pages/search_page.dart'; // Module 04
 import '../features/favorites/presentation/pages/favorites_page.dart'; // Module 07
+import '../features/publishing/presentation/pages/publish_page.dart'; // Module 08
 import 'app_shell.dart';
 import 'placeholder_pages.dart';
 import 'router_guard.dart';
@@ -130,7 +131,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.publish,
-        builder: (_, __) => const ComingSoonPage(title: 'Publish property', module: 'Module 08'),
+        builder: (_, __) => const PublishPage(), // Module 08
       ),
     ],
   );
