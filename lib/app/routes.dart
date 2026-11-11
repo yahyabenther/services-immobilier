@@ -21,6 +21,7 @@ class Routes {
   static const profile = '/profile'; // Module 02
 
   static const publish = '/publish'; // Module 08
+  static const myListings = '/my-listings'; // Module 09
   static const adminDashboard = '/admin/dashboard';
 
   // ---- Module 10: Agent / Agency (all require a signed-in user) -------------

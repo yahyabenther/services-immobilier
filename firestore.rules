@@ -13,8 +13,9 @@ service cloud.firestore {
     }
 
     // ---- Module 01: users ---------------------------------------------------
-    // `role` is never client-writable: the agent role is granted by the
-    // onAgentProfileCreated Cloud Function (Module 10).
+    // `role` is client-writable in ONE case only: a verified, active `user` may set
+    // their own role to `owner` (B2, last branch of `update`). The agent role is
+    // granted by the onAgentProfileCreated Cloud Function (Module 10).
     match /users/{uid} {
       allow read: if isSelf(uid) || isAdmin();
 
@@ -30,32 +31,141 @@ service cloud.firestore {
       allow update: if (isSelf(uid)
           && request.resource.data.diff(resource.data).affectedKeys()
                .hasOnly(['name', 'phone', 'photoUrl', 'preferredCity', 'notificationPreferences']))
+        // B2: a verified, active plain user may promote THEMSELVES to owner, once.
+        // Only `role` may change, and only user -> owner. agent / admin stay out of reach.
+        || (isSelf(uid)
+            && request.auth.token.email_verified == true
+            && resource.data.status == 'active'
+            && resource.data.role == 'user'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+            && request.resource.data.role == 'owner')
         || isAdmin();
 
       allow delete: if false;
     }
 
-    // ---- Module 03 + 10: properties -------------------------------------------
+    // ---- Module 08: who may publish + what a NEW listing must look like -------
+    function publisherData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Owner or agent, verified email, active account. (Admins are handled by isAdmin().)
+    function canPublish() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && publisherData().status == 'active'
+        && publisherData().role in ['owner', 'agent'];
+    }
+
+    // Mirrors PublishingConfig + PropertyWriteMapper (Flutter). Change them together.
+    function validNewListing(d) {
+      return d.keys().hasAll(['ownerId', 'agentId', 'ownerRole', 'title', 'description',
+             'transactionType', 'propertyType', 'price', 'currency', 'surface', 'isStudio',
+             'isNewBuild', 'governorate', 'city', 'images', 'amenities', 'status',
+             'verificationStatus', 'views', 'favoritesCount', 'createdAt', 'updatedAt', 'publishedAt'])
+        && d.keys().hasOnly(['ownerId', 'agentId', 'ownerName', 'ownerRole', 'title', 'description',
+             'transactionType', 'propertyType', 'price', 'currency', 'surface', 'bedrooms', 'bathrooms',
+             'isStudio', 'isNewBuild', 'governorate', 'city', 'area', 'latitude', 'longitude',
+             'images', 'amenities', 'status', 'verificationStatus', 'views', 'favoritesCount',
+             'createdAt', 'updatedAt', 'publishedAt'])
+
+        // Ownership: the creator is the owner; only a real agent account sets agentId.
+        && d.ownerId == request.auth.uid
+        && ((d.agentId == null && d.ownerRole == 'owner' && publisherData().role == 'owner')
+            || (d.agentId == request.auth.uid && d.ownerRole == 'agent' && publisherData().role == 'agent'))
+        && (!('ownerName' in d) || (d.ownerName is string && d.ownerName.size() <= 120))
+
+        // Lifecycle: a new listing is ALWAYS in moderation, with clean counters.
+        && d.status == 'pending_review'
+        && d.verificationStatus == 'not_submitted'
+        && d.views == 0
+        && d.favoritesCount == 0
+        && d.publishedAt == null
+        && d.createdAt == request.time
+        && d.updatedAt == request.time
+
+        // Content.
+        && d.title is string && d.title.trim().size() >= 5 && d.title.size() <= 100
+        && d.description is string && d.description.trim().size() >= 20 && d.description.size() <= 2000
+        && d.transactionType in ['buy', 'rent']
+        && d.propertyType in ['apartment', 'villa', 'house', 'duplex', 'triplex', 'land',
+                              'office', 'commercial', 'industrial']
+        && d.price is number && d.price > 0 && d.price <= 1000000000
+        && d.currency == 'TND'
+        && d.surface is number && d.surface > 0 && d.surface <= 1000000
+        && d.isStudio is bool
+        && d.isNewBuild is bool
+        && (!('bedrooms' in d) || (d.bedrooms is int && d.bedrooms >= 0 && d.bedrooms <= 20))
+        && (!('bathrooms' in d) || (d.bathrooms is int && d.bathrooms >= 0 && d.bathrooms <= 20))
+
+        // Location.
+        && d.governorate in ['Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan',
+             'Bizerte', 'Béja', 'Jendouba', 'Le Kef', 'Siliana', 'Sousse', 'Monastir', 'Mahdia',
+             'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Gabès', 'Médenine', 'Tataouine',
+             'Gafsa', 'Tozeur', 'Kébili']
+        && d.city is string && d.city.trim().size() > 0 && d.city.size() <= 80
+        && (!('area' in d) || (d.area is string && d.area.size() <= 80))
+        && (('latitude' in d) == ('longitude' in d))
+        && (!('latitude' in d)
+            || (d.latitude is number && d.longitude is number
+                && d.latitude >= 30 && d.latitude <= 37.6
+                && d.longitude >= 7.4 && d.longitude <= 11.7))
+
+        // Media + amenities. Rules cannot loop, so only the cover URL is pattern-checked.
+        && d.images is list && d.images.size() >= 1 && d.images.size() <= 10
+        && d.images[0] is string && d.images[0].matches('^https://res\\.cloudinary\\.com/.+')
+        && d.amenities is list && d.amenities.size() <= 10
+        && d.amenities.hasOnly(['parking', 'pool', 'elevator', 'garden', 'seaView', 'centralHeating',
+                                'airConditioning', 'security', 'terrace', 'balcony']);
+    }
+
+    // ---- Module 09: lifecycle moves by the listing's owner or its agent ------
+    function isListingManager() {
+      return signedIn()
+        && (resource.data.ownerId == request.auth.uid
+            || resource.data.agentId == request.auth.uid);
+    }
+
+    // Same table as `ownerLifecycle` in Flutter (listing_lifecycle.dart). Change them together.
+    function lifecycleMove() {
+      let before = resource.data.status;
+      let after  = request.resource.data.status;
+      return isListingManager()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && (
+             // Submit for review: needs an active, verified owner/agent (same gate as create).
+             (before in ['draft', 'rejected'] && after == 'pending_review' && canPublish())
+             // Back to draft, to fix and resubmit.
+          || (before in ['rejected', 'removed'] && after == 'draft')
+             // Withdraw. Never from `suspended`: that is a moderation hold.
+          || (before in ['draft', 'pending_review', 'published', 'rejected', 'expired']
+              && after == 'removed')
+        );
+    }
+
+    // ---- Module 03 + 08 + 09 + 10: properties ---------------------------------
     match /properties/{propertyId} {
-      // Module 10: the responsible agent also reads their own non-public listings.
+      // The responsible owner / agent also reads their own non-public listings.
       allow read: if resource.data.status == 'published'
         || (signedIn() && (resource.data.ownerId == request.auth.uid
                            || resource.data.agentId == request.auth.uid))
         || isAdmin();
 
-      // Module 08 will add owner/agent create + edit rules here.
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin()
-        // Module 10: agent lifecycle moves ONLY. Never published / rejected /
-        // suspended / expired, never agentId, ownerId, counters.
-        || (signedIn() && resource.data.agentId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
-            && (
-              (resource.data.status in ['draft', 'rejected']
-                 && request.resource.data.status == 'pending_review')
-              || (resource.data.status in ['draft', 'pending_review', 'published', 'rejected', 'expired']
-                 && request.resource.data.status == 'removed')
-            ));
+      // Module 08: owners and agents create ONLY pending_review listings that belong
+      // to them. Nobody but an admin can create a `published` document or set another
+      // user as owner. Content edits arrive with B3 (edit mode).
+      allow create: if isAdmin() || (canPublish() && validNewListing(request.resource.data));
+
+      // Module 09: owner / agent move ONLY status + updatedAt along lifecycleMove().
+      // Never published / suspended / expired, never ownerId, agentId, counters.
+      allow update: if isAdmin() || lifecycleMove();
+
+      // Owners may delete only what is not live or under review.
+      allow delete: if isAdmin()
+        || (signedIn()
+            && resource.data.ownerId == request.auth.uid
+            && resource.data.status in ['draft', 'rejected', 'removed']);
     }
 
     // ---- Module 07: favorites (document id = {userId}_{propertyId}) ----------
@@ -148,8 +258,23 @@ service cloud.firestore {
     }
 
     // ---- Module 10 / 09 base: conversations (participants only) ----------------
+    // Queries are checked against the rule, not filtered by it: the agent inbox runs
+    // where('recipientId' == uid), which `isConversationParty()` can prove
+    // (the old `uid in participants` could not). `participants` is always
+    // [userId, recipientId] (enforced on create), so access is unchanged.
+    function isConversationParty() {
+      return resource.data.userId == request.auth.uid
+          || resource.data.recipientId == request.auth.uid;
+    }
+
     match /conversations/{cid} {
-      allow read: if signedIn() && request.auth.uid in resource.data.participants;
+      allow list: if signedIn() && isConversationParty();
+
+      // Single read. The id is `{propertyId}_{uid}`: a user may probe their OWN id
+      // before the thread exists (openOrCreate does a get() first).
+      allow get: if signedIn() && (
+           (resource != null && isConversationParty())
+        || (resource == null && cid.matches('.+_' + request.auth.uid)));
 
       allow create: if signedIn()
         && cid == request.resource.data.propertyId + '_' + request.auth.uid

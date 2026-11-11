@@ -20,7 +20,8 @@ class HomeDiscoveryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final canPublish = canPublishProperty(ref.watch(currentUserProvider));
+    final me = ref.watch(currentUserProvider);
+    final canPublish = canPublishProperty(me) || canBecomeOwner(me);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FD),

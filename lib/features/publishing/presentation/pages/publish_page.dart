@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/data/owner_role_service.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../property_discovery/domain/publish_permission.dart';
@@ -283,20 +284,45 @@ class _SuccessView extends StatelessWidget {
   );
 }
 
-class _NotAllowedView extends StatelessWidget {
+class _NotAllowedView extends ConsumerStatefulWidget {
   const _NotAllowedView({required this.user});
   final AuthUser? user;
 
- String get _reason {
-  if (user == null) return 'Please sign in to publish a property.';
-  if (!user!.emailVerified) {
-    return 'Verify your email address before publishing.';
-  }
-  if (user!.role == UserRole.user) {
-    return 'Publishing is available to owner and agent accounts.';
-  }
-  return 'Your account is not allowed to publish listings.';
+  @override
+  ConsumerState<_NotAllowedView> createState() => _NotAllowedViewState();
 }
+
+class _NotAllowedViewState extends ConsumerState<_NotAllowedView> {
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _becomeOwner() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(ownerRoleServiceProvider).becomeOwner();
+      // Success: the profile stream delivers role=owner and PublishPage rebuilds
+      // into the wizard, replacing this widget.
+    } on BecomeOwnerException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  String get _reason {
+    final user = widget.user;
+    if (user == null) return 'Please sign in to publish a property.';
+    if (!user.emailVerified) {
+      return 'Verify your email address before publishing.';
+    }
+    if (canBecomeOwner(user)) {
+      return 'Publish as an owner. Every listing is reviewed by our team before it appears.';
+    }
+    return 'Your account is not allowed to publish listings.';
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -314,7 +340,34 @@ class _NotAllowedView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16, height: 1.4),
             ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ],
             const SizedBox(height: 20),
+            if (canBecomeOwner(widget.user)) ...[
+              FilledButton(
+                onPressed: _busy ? null : _becomeOwner,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Become an owner'),
+              ),
+              const SizedBox(height: 10),
+            ],
             OutlinedButton(
               onPressed: () =>
                   context.canPop() ? context.pop() : context.go(Routes.home),

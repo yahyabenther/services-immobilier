@@ -119,6 +119,17 @@ class FirebaseAuthDatasource {
     final user = _auth.currentUser;
     if (user == null) return null;
     await user.reload();
+
+    final fresh = _auth.currentUser;
+    if (fresh != null && fresh.emailVerified) {
+      // `reload()` updates the user object, not the ID token. Firestore rules read
+      // `request.auth.token.email_verified` from the token, which stays stale for up
+      // to an hour. Refresh once, and only if the claim is still false (cached read).
+      final token = await fresh.getIdTokenResult();
+      if (token.claims?['email_verified'] != true) {
+        await fresh.getIdToken(true);
+      }
+    }
     return _auth.currentUser;
   }
 

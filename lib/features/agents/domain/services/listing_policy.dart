@@ -1,4 +1,5 @@
 import '../../../properties/domain/entities/property.dart';
+import '../../../properties/domain/listing_lifecycle.dart';
 
 /// What an agent may do with one of THEIR listings, by status (spec §5.5).
 /// This only drives the UI and the client guard. The real enforcement is in
@@ -19,18 +20,11 @@ class ListingPolicy {
       };
 
   /// draft | rejected -> pending_review (after the shared validation).
-  static bool canSubmit(PropertyStatus s) => s == PropertyStatus.draft || s == PropertyStatus.rejected;
+  /// Driven by the shared lifecycle table (mirrors the Firestore rules).
+  static bool canSubmit(PropertyStatus s) => canMove(s, PropertyStatus.pendingReview);
 
   /// -> removed. Allowed from every non-final, non-suspended state.
-  static bool canWithdraw(PropertyStatus s) => switch (s) {
-        PropertyStatus.draft ||
-        PropertyStatus.pendingReview ||
-        PropertyStatus.published ||
-        PropertyStatus.rejected ||
-        PropertyStatus.expired =>
-          true,
-        _ => false,
-      };
+  static bool canWithdraw(PropertyStatus s) => canMove(s, PropertyStatus.removed);
 
   static String statusLabel(PropertyStatus s) => switch (s) {
         PropertyStatus.draft => 'Draft',

@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,8 @@ import '../features/property_discovery/presentation/screens/home_discovery_scree
 import '../features/search/presentation/pages/search_page.dart'; // Module 04
 import '../features/favorites/presentation/pages/favorites_page.dart'; // Module 07
 import '../features/publishing/presentation/pages/publish_page.dart'; // Module 08
+
+import '../features/listings/presentation/pages/my_listings_page.dart'; // Module 09
 import 'app_shell.dart';
 import 'placeholder_pages.dart';
 import 'router_guard.dart';
@@ -132,6 +135,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.publish,
         builder: (_, __) => const PublishPage(), // Module 08
+      ),
+      GoRoute(
+        path: Routes.myListings,
+        builder: (_, _) => const MyListingsPage(),
       ),
     ],
   );

@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/errors/auth_failure.dart';
 import '../data/datasources/firebase_auth_datasource.dart';
+import '../data/owner_role_service.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../domain/entities/auth_user.dart';
 import '../domain/repositories/auth_repository.dart';
@@ -24,6 +25,9 @@ import 'auth_state.dart';
 final firebaseAuthProvider = Provider<FirebaseAuth>((_) => FirebaseAuth.instance);
 final firestoreProvider = Provider<FirebaseFirestore>((_) => FirebaseFirestore.instance);
 final googleSignInProvider = Provider<GoogleSignIn>((_) => GoogleSignIn());
+final ownerRoleServiceProvider = Provider(
+  (ref) => OwnerRoleService(ref.watch(firestoreProvider), ref.watch(firebaseAuthProvider)),
+);
 
 final authDatasourceProvider = Provider<FirebaseAuthDatasource>((ref) => FirebaseAuthDatasource(
       ref.watch(firebaseAuthProvider),
