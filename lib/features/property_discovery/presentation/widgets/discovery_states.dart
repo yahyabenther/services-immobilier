@@ -39,9 +39,9 @@ class DiscoveryErrorState extends StatelessWidget {
   Widget build(BuildContext context) => _Panel(
         icon: Icons.cloud_off_rounded,
         iconColor: AppColors.error,
-        title: "Couldn't load this section",
+        title: 'Impossible de charger cette section',
         message: message,
-        actionLabel: 'Retry',
+        actionLabel: 'Réessayer',
         onAction: onRetry,
       );
 }
@@ -69,7 +69,7 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
       ),

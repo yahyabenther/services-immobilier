@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class AppSectionHeader extends StatelessWidget {
-  const AppSectionHeader({super.key, required this.title, this.subtitle, this.onSeeAll});
+  const AppSectionHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.onSeeAll,
+    this.seeAllLabel = 'See all',
+  });
 
   final String title;
   final String? subtitle;
   final VoidCallback? onSeeAll;
+  final String seeAllLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +31,15 @@ class AppSectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (onSeeAll != null) TextButton(onPressed: onSeeAll, child: const Text('See all')),
+        if (onSeeAll != null)
+          TextButton(
+            onPressed: onSeeAll,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(seeAllLabel),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_forward_rounded, size: 16),
+            ]),
+          ),
       ],
     );
   }

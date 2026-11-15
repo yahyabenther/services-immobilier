@@ -13,17 +13,17 @@ class RecommendedPropertiesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PropertiesSection(
-      title: 'Recommended for you',
-      // Honest label: recent + verified + popular, not personalised.
-      subtitle: 'Recent, verified and popular listings',
+      title: 'Biens en vedette',
+      layout: PropertiesLayout.featured,
+      seeAllLabel: 'Explorer',
       data: ref.watch(recommendedPropertiesProvider),
       onRetry: () => ref.invalidate(recommendedPropertiesProvider),
       onSeeAll: () => context.go(Routes.searchWith(section: 'recommended')),
       empty: DiscoveryEmptyState(
         icon: Icons.home_work_outlined,
-        title: 'No listings yet',
-        message: 'New properties will appear here. Try searching in the meantime.',
-        actionLabel: 'Search',
+        title: 'Aucune annonce pour le moment',
+        message: 'Les nouveaux biens apparaîtront ici. En attendant, lancez une recherche.',
+        actionLabel: 'Rechercher',
         onAction: () => context.go(Routes.search),
       ),
     );

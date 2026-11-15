@@ -18,7 +18,7 @@ class AuthScaffold extends StatelessWidget {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                 onPressed: () =>
-                    context.canPop() ? context.pop() : context.go(Routes.welcome),
+                    context.canPop() ? context.pop() : context.go(Routes.home),
               ),
             )
           : null,

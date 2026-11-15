@@ -12,22 +12,24 @@ class PublishPropertyCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(16)),
-      child: Row(children: [
-        const Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Have a property to sell or rent?',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
-            SizedBox(height: 4),
-            Text('Reach thousands of buyers and renters.', style: TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
-        ),
-        const SizedBox(width: 12),
-        FilledButton(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(22)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('ESPACE PROPRIÉTAIRES',
+            style: TextStyle(color: AppColors.accent, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+        const SizedBox(height: 8),
+        const Text('Vous avez un bien à vendre ou à louer ?',
+            style: TextStyle(color: Colors.white, fontSize: 18, height: 1.2, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 6),
+        const Text("Touchez des milliers d'acheteurs et de locataires.",
+            style: TextStyle(color: Colors.white70, fontSize: 13)),
+        const SizedBox(height: 16),
+        FilledButton.icon(
           onPressed: () => context.push(Routes.publish),
-          style: FilledButton.styleFrom(minimumSize: const Size(0, 44), padding: const EdgeInsets.symmetric(horizontal: 14)),
-          child: const Text('Publish'),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.accent, foregroundColor: Colors.white),
+          icon: const Icon(Icons.add_home_work_outlined, size: 20),
+          label: const Text('Publier un bien'),
         ),
       ]),
     );

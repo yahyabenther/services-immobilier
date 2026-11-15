@@ -1,86 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../app/routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../properties/domain/entities/property.dart';
-import '../providers/property_discovery_providers.dart';
 
-class TransactionShortcuts extends ConsumerWidget {
-  const TransactionShortcuts({super.key});
+/// Acheter / Louer pill toggle. The chosen type is passed on to Search.
+class TransactionToggle extends StatelessWidget {
+  const TransactionToggle({super.key, required this.value, required this.onChanged});
+
+  final TransactionType value;
+  final ValueChanged<TransactionType> onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    void open(TransactionType type) => context.go(
-          Routes.searchWith(transactionType: type, location: ref.read(selectedLocationProvider)),
-        );
-
-    return Row(children: [
-      Expanded(
-        child: _Tile(
-          icon: Icons.home_rounded,
-          title: 'Buy',
-          subtitle: 'Find your dream home',
-          filled: true,
-          onTap: () => open(TransactionType.buy),
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: AppColors.chip, borderRadius: BorderRadius.circular(16)),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Expanded(
+          child: _Segment(
+            label: 'Acheter',
+            selected: value == TransactionType.buy,
+            onTap: () => onChanged(TransactionType.buy),
+          ),
         ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: _Tile(
-          icon: Icons.key_rounded,
-          title: 'Rent',
-          subtitle: 'Flexible. Easy. Fast.',
-          filled: false,
-          onTap: () => open(TransactionType.rent),
+        Expanded(
+          child: _Segment(
+            label: 'Louer',
+            selected: value == TransactionType.rent,
+            onTap: () => onChanged(TransactionType.rent),
+          ),
         ),
-      ),
-    ]);
+      ]),
+    );
   }
 }
 
-class _Tile extends StatelessWidget {
-  const _Tile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.filled,
-    required this.onTap,
-  });
+class _Segment extends StatelessWidget {
+  const _Segment({required this.label, required this.selected, required this.onTap});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool filled;
+  final String label;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final fg = filled ? Colors.white : AppColors.text;
     return Semantics(
       button: true,
-      label: '$title. $subtitle',
+      selected: selected,
+      label: label,
       child: Material(
-        color: filled ? AppColors.primary : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: selected ? AppColors.navy : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            constraints: const BoxConstraints(minHeight: 104),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: filled ? null : Border.all(color: AppColors.line),
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(icon, color: filled ? Colors.white : AppColors.primary, size: 28),
-              const SizedBox(height: 10),
-              Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: fg)),
-              Text(subtitle,
-                  style: TextStyle(fontSize: 12, color: filled ? Colors.white70 : AppColors.muted)),
-            ]),
+          child: Center(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? Colors.white : AppColors.muted)),
           ),
         ),
       ),

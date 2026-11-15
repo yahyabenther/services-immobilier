@@ -27,32 +27,68 @@ class HomeHeader extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final name = greetingName(user);
 
-    return Row(children: [
-      Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(name == null ? 'Hello 👋' : 'Hello, $name 👋',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.text)),
-          const SizedBox(height: 2),
-          const Text('Find your perfect property in Tunisia', style: TextStyle(color: AppColors.muted)),
-        ]),
-      ),
-      // No notification bell: it appears only once Module 12 exists.
-      Semantics(
-        button: true,
-        label: 'Open profile',
-        child: InkResponse(
-          onTap: () => context.go(Routes.profile),
-          radius: 28,
-          child: CircleAvatar(
-            radius: 22,
-            backgroundColor: AppColors.primary,
-            child: Text(_initials(user),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        const Text('DARNA',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 2, color: AppColors.navy)),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: name == null
+                  ? const SizedBox.shrink()
+                  : Text('Bonjour, $name 👋',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
+            ),
           ),
         ),
-      ),
+        if (user == null)
+          // Guest: browsing is free, the account is only needed to go further.
+          Semantics(
+            button: true,
+            label: 'Se connecter',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => context.push(Routes.login),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(20)),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.person_outline, size: 16, color: Colors.white),
+                  SizedBox(width: 6),
+                  Text('Connexion',
+                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+                ]),
+              ),
+            ),
+          )
+        else
+          Semantics(
+            button: true,
+            label: 'Ouvrir le profil',
+            child: InkResponse(
+              onTap: () => context.go(Routes.profile),
+              radius: 26,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.navy,
+                child: Text(_initials(user),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+              ),
+            ),
+          ),
+      ]),
+      const SizedBox(height: 12),
+      const Text("Trouvez votre lieu d'exception.",
+          style: TextStyle(fontSize: 24, height: 1.15, fontWeight: FontWeight.w800, color: AppColors.navy)),
+      const SizedBox(height: 3),
+      const Text("L'immobilier de prestige et de caractère en Tunisie.",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
     ]);
   }
 }

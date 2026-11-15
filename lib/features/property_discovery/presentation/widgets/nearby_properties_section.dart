@@ -21,13 +21,13 @@ class NearbyPropertiesSection extends ConsumerWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppSectionHeader(title: 'Nearby properties'),
-          const SizedBox(height: 10),
+          const AppSectionHeader(title: 'Près de vous'),
+          const SizedBox(height: 8),
           DiscoveryEmptyState(
             icon: Icons.location_searching_rounded,
-            title: 'Choose your area',
-            message: 'Pick a governorate or use your location to see listings close to you.',
-            actionLabel: 'Choose location',
+            title: 'Choisissez votre zone',
+            message: 'Sélectionnez un gouvernorat ou utilisez votre position pour voir les biens proches.',
+            actionLabel: 'Choisir la zone',
             onAction: () => showLocationPicker(context),
           ),
         ],
@@ -36,16 +36,17 @@ class NearbyPropertiesSection extends ConsumerWidget {
 
     final byDevice = location.hasCoordinates;
     return PropertiesSection(
-      title: byDevice ? 'Nearby properties' : 'Properties in ${location.label}',
-      subtitle: byDevice ? 'Within 10 km of your location' : null,
+      title: byDevice ? 'Près de vous' : 'Biens à ${location.label}',
+      layout: PropertiesLayout.list,
+      seeAllLabel: 'Voir tout',
       data: ref.watch(nearbyPropertiesProvider),
       onRetry: () => ref.invalidate(nearbyPropertiesProvider),
       onSeeAll: () => context.go(Routes.searchWith(section: 'nearby', location: location)),
       empty: DiscoveryEmptyState(
         icon: Icons.location_off_outlined,
-        title: byDevice ? 'Nothing within 10 km' : 'No listings in ${location.label}',
-        message: 'Try another area to discover more properties.',
-        actionLabel: 'Change area',
+        title: byDevice ? 'Rien dans un rayon de 10 km' : 'Aucun bien à ${location.label}',
+        message: 'Essayez une autre zone pour découvrir plus de biens.',
+        actionLabel: 'Changer de zone',
         onAction: () => showLocationPicker(context),
       ),
     );

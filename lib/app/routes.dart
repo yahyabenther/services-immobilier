@@ -19,6 +19,7 @@ class Routes {
   static const map = '/map'; // Module 06
   static const favorites = '/favorites'; // Module 07
   static const profile = '/profile'; // Module 02
+  static const messages = '/messages';
 
   static const publish = '/publish'; // Module 08
   static const adminDashboard = '/admin/dashboard';

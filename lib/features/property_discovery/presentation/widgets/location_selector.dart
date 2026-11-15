@@ -12,29 +12,29 @@ class LocationSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = ref.watch(selectedLocationProvider);
-    final label = location == null ? 'Choose your location' : '${location.label}, Tunisia';
+    final label = location == null ? 'Choisir ma zone' : location.label;
     return Semantics(
       button: true,
-      label: 'Location: $label. Tap to change.',
+      label: 'Zone : $label. Touchez pour changer.',
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => showLocationPicker(context),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.line),
           ),
           child: Row(children: [
-            const Icon(Icons.location_on, color: AppColors.primary, size: 20),
+            const Icon(Icons.location_on, color: AppColors.accent, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                      fontWeight: FontWeight.w600, color: location == null ? AppColors.muted : AppColors.text)),
+                      fontSize: 13, fontWeight: FontWeight.w600, color: location == null ? AppColors.muted : AppColors.text)),
             ),
             const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.muted),
           ]),
@@ -77,16 +77,16 @@ class _LocationPickerSheetState extends ConsumerState<LocationPickerSheet> {
       case DeviceLocationOutcome.success:
         Navigator.of(context).pop();
       case DeviceLocationOutcome.denied:
-        _snack('Location permission was denied. You can still pick a governorate below.');
+        _snack('Permission de localisation refusée. Vous pouvez choisir un gouvernorat ci-dessous.');
       case DeviceLocationOutcome.deniedForever:
         _snack(
-          'Location is blocked for ImmoFind. Enable it in system settings, or pick a governorate.',
-          action: SnackBarAction(label: 'Settings', onPressed: notifier.openSettings),
+          'La localisation est bloquée pour l\'application. Activez-la dans les paramètres ou choisissez un gouvernorat.',
+          action: SnackBarAction(label: 'Paramètres', onPressed: notifier.openSettings),
         );
       case DeviceLocationOutcome.serviceDisabled:
-        _snack('Location services are turned off. Turn them on, or pick a governorate.');
+        _snack('Les services de localisation sont désactivés. Activez-les ou choisissez un gouvernorat.');
       case DeviceLocationOutcome.error:
-        _snack("Couldn't get your location. Pick a governorate instead.");
+        _snack("Impossible d'obtenir votre position. Choisissez un gouvernorat.");
     }
   }
 
@@ -102,21 +102,21 @@ class _LocationPickerSheetState extends ConsumerState<LocationPickerSheet> {
           padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('Choose your location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            child: Text('Choisir ma zone', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           ),
         ),
         ListTile(
           leading: _locating
               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.my_location, color: AppColors.primary),
-          title: const Text('Use my current location'),
-          subtitle: const Text('Find listings within 10 km'),
+          title: const Text('Utiliser ma position actuelle'),
+          subtitle: const Text('Biens dans un rayon de 10 km'),
           onTap: _locating ? null : _useDeviceLocation,
         ),
         if (selected != null)
           ListTile(
             leading: const Icon(Icons.clear_rounded),
-            title: const Text('Clear location'),
+            title: const Text('Effacer la zone'),
             onTap: () {
               ref.read(selectedLocationProvider.notifier).clear();
               Navigator.of(context).pop();

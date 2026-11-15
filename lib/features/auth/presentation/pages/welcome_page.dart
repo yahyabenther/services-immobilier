@@ -182,6 +182,25 @@ Widget _buildHeader(bool isMobile) {
               _buildCategory(Icons.business, 'Buildings'),
             ],
           ),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: 260,
+            child: FilledButton.icon(
+              onPressed: () => context.go(Routes.home),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: navy,
+              ),
+              icon: const Icon(Icons.search_rounded),
+              label: const Text('Explorer les biens'),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: () => context.push(Routes.login),
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            child: const Text('Se connecter'),
+          ),
         ],
       ),
     );

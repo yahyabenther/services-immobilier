@@ -4,35 +4,45 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../properties/domain/entities/property.dart';
 import '../providers/property_discovery_providers.dart';
 
 /// Looks like a search field but only opens Module 04 (no search engine here).
 class DiscoverySearchEntry extends ConsumerWidget {
-  const DiscoverySearchEntry({super.key});
+  const DiscoverySearchEntry({super.key, this.transactionType});
+
+  final TransactionType? transactionType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Semantics(
       button: true,
-      label: 'Search properties',
+      label: 'Rechercher un bien',
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => context.go(Routes.searchWith(location: ref.read(selectedLocationProvider))),
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => context.go(
+          Routes.searchWith(transactionType: transactionType, location: ref.read(selectedLocationProvider)),
+        ),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.line),
           ),
-          child: const Row(children: [
-            Icon(Icons.search, color: AppColors.muted),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text('Search by city, neighborhood, or property...',
+          child: Row(children: [
+            const Icon(Icons.search, color: AppColors.navy),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text('La Marsa, Gammarth, Hammamet…',
                   maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: AppColors.muted)),
             ),
-            Icon(Icons.tune_rounded, color: AppColors.primary),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
+            ),
           ]),
         ),
       ),

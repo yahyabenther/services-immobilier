@@ -17,12 +17,20 @@ void main() {
     expect(authRedirect(const AuthState.initializing(), Routes.splash), isNull);
   });
 
-  test('signed out: only public routes', () {
+  test('signed out (guest): can browse, only publish/admin ask for login', () {
     const s = AuthState.unauthenticated();
     expect(authRedirect(s, Routes.login), isNull);
-    expect(authRedirect(s, Routes.home), Routes.welcome);
-    expect(authRedirect(s, Routes.adminDashboard), Routes.welcome);
-    expect(authRedirect(s, Routes.splash), Routes.welcome);
+    expect(authRedirect(s, Routes.splash), welcomeFirst ? Routes.welcome : Routes.home);
+    expect(authRedirect(s, Routes.home), isNull);
+    expect(authRedirect(s, Routes.search), isNull);
+    expect(authRedirect(s, Routes.map), isNull);
+    expect(authRedirect(s, Routes.propertyDetails('abc')), isNull);
+    // Account tabs show an in-place "Se connecter" panel instead of redirecting.
+    expect(authRedirect(s, Routes.favorites), isNull);
+    expect(authRedirect(s, Routes.messages), isNull);
+    expect(authRedirect(s, Routes.profile), isNull);
+    expect(authRedirect(s, Routes.publish), Routes.login);
+    expect(authRedirect(s, Routes.adminDashboard), Routes.login);
   });
 
   test('reset-password link always allowed', () {
