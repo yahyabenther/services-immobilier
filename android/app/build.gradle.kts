@@ -31,7 +31,7 @@ android {
     defaultConfig {
         // Store identifier (cannot change once on the Play Store). The Kotlin
         // `namespace` above stays com.example.team_app: it is only the code package.
-        applicationId = "com.darna.app"
+        applicationId = "tn.darna.immobilier"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

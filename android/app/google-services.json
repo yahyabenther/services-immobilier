@@ -84,6 +84,58 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154527839522:android:d67f6ee94a806f8518a17b",
+        "android_client_info": {
+          "package_name": "tn.darna.immobilier"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "154527839522-e1r8snp8uttklecjpv00mim3eo4inqo8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tn.darna.immobilier",
+            "certificate_hash": "0f4a4012553d9c6dbb1fd6805eeaadb55eb20254"
+          }
+        },
+        {
+          "client_id": "154527839522-hf3ucph3rb6q87ngt5as86gdsu41l01s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tn.darna.immobilier",
+            "certificate_hash": "d55bad63bc64069739b6521a28e23c6e596a0eed"
+          }
+        },
+        {
+          "client_id": "154527839522-lrlus3iiou5d4u8op60ehmomspl91alg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSAJT6_wr65Q-NuHJV7_h8E1-nSx9HPKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "154527839522-lrlus3iiou5d4u8op60ehmomspl91alg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "154527839522-n1v5mdk4u5jbfek095vpaks7qjkk9n3v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.teamApp"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
